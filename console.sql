@@ -215,8 +215,8 @@ CREATE TABLE public."check"
     check_time VARCHAR(14),
     result BOOLEAN,
     CONSTRAINT check_admin_username_request_id_pk PRIMARY KEY (admin_username, request_id),
-    CONSTRAINT check_admin_username_fk FOREIGN KEY (admin_username) REFERENCES admin (username),
-    CONSTRAINT check_request_id_fk FOREIGN KEY (request_id) REFERENCES request (id)
+    CONSTRAINT check_admin_username_fk FOREIGN KEY (admin_username) REFERENCES admin (username) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT check_request_id_fk FOREIGN KEY (request_id) REFERENCES request (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 
@@ -229,4 +229,4 @@ CREATE TABLE public.enroll
     CONSTRAINT enroll_coures_id_other_username_pk PRIMARY KEY (coures_id, other_username),
     CONSTRAINT enroll_course_id_fk FOREIGN KEY (coures_id) REFERENCES course (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT enroll_other_username_fk FOREIGN KEY (other_username) REFERENCES other (username) ON DELETE CASCADE ON UPDATE CASCADE
-)
+);
