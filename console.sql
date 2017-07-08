@@ -11,7 +11,6 @@ CREATE TABLE public."user"
     profile_pics VARCHAR(255)
 );
 CREATE UNIQUE INDEX "user_e-mail_uindex" ON public."user" ("e-mail");
-CREATE UNIQUE INDEX user_pkey ON public."user" (username);
 
 
 CREATE TABLE public.admin
@@ -19,7 +18,6 @@ CREATE TABLE public.admin
     username VARCHAR(17) PRIMARY KEY NOT NULL,
     CONSTRAINT admin_username_fkey FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE
 );
-CREATE UNIQUE INDEX admin_pkey ON public.admin (username);
 
 
 CREATE TABLE public.other
@@ -30,7 +28,6 @@ CREATE TABLE public.other
     membership_expiry VARCHAR(10) NOT NULL,
     CONSTRAINT other_user_username_fk FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE
 );
-CREATE UNIQUE INDEX other_pkey ON public.other (username);
 
 
 CREATE TABLE public.lesson
@@ -38,7 +35,6 @@ CREATE TABLE public.lesson
     id VARCHAR(6) PRIMARY KEY NOT NULL,
     name VARCHAR(15) NOT NULL
 );
-CREATE UNIQUE INDEX lesson_id_uindex ON public.lesson (id);
 
 
 CREATE TABLE public.request
@@ -46,7 +42,6 @@ CREATE TABLE public.request
     id VARCHAR(6) PRIMARY KEY NOT NULL,
     submission_time VARCHAR(12) NOT NULL
 );
-CREATE UNIQUE INDEX request_id_uindex ON public.request (id);
 
 
 CREATE TABLE public.topic
@@ -77,8 +72,6 @@ CREATE TABLE public.post
     CONSTRAINT post_user_username_fk FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT post_topic_lesson_fk FOREIGN KEY (lesson_id, topic_name) REFERENCES topic (lesson_id, name) ON DELETE CASCADE ON UPDATE CASCADE
 );
-CREATE UNIQUE INDEX post_id_uindex ON public.post (id);
-
 
 CREATE TABLE public.sample_test
 (
@@ -89,7 +82,6 @@ CREATE TABLE public.sample_test
     lesson_id VARCHAR(6) NOT NULL,
     CONSTRAINT sample_test_lesson_lesson_id_fk FOREIGN KEY (lesson_id) REFERENCES lesson (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
-CREATE UNIQUE INDEX sample_test_id_uindex ON public.sample_test (id);
 
 
 CREATE TABLE public.question
@@ -99,7 +91,7 @@ CREATE TABLE public.question
     sample_test_id VARCHAR(6),
     CONSTRAINT question_sample_test_id_fk FOREIGN KEY (sample_test_id) REFERENCES sample_test (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
-CREATE UNIQUE INDEX question_post_id_uindex ON public.question (post_id);
+
 
 
 
@@ -109,7 +101,7 @@ CREATE TABLE public.answer
     question_id VARCHAR(6) NOT NULL,
     CONSTRAINT answer_question_post_id_fk FOREIGN KEY (question_id) REFERENCES question (post_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
-CREATE UNIQUE INDEX answer_post_id_uindex ON public.answer (post_id);
+
 
 CREATE TABLE public."like"
 (
