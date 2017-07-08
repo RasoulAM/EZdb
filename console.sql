@@ -2,31 +2,24 @@ CREATE DOMAIN date AS VARCHAR(10) CHECK ( VALUE ~ '^(0?[1-9]|[12][0-9]|3[01])[\/
 
 CREATE DOMAIN age AS INTEGER CHECK (VALUE > 0);
 
-CREATE DOMAIN "e-mail"  AS TEXT CHECK (VALUE ~ '(?:[a-z0-9!#$%&''*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&''*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])');
+CREATE DOMAIN "e-mail"  AS TEXT NOT NULL CHECK (VALUE ~ '(?:[a-z0-9!#$%&''*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&''*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])');
 
 CREATE DOMAIN url AS TEXT CHECK (VALUE ~ '/(((http|ftp|https):\/{2})+(([0-9a-z_-]+\.)+(aero|asia|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel|ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|ax|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bm|bn|bo|br|bs|bt|bv|bw|by|bz|ca|cc|cd|cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cu|cv|cx|cy|cz|cz|de|dj|dk|dm|do|dz|ec|ee|eg|er|es|et|eu|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|gp|gq|gr|gs|gt|gu|gw|gy|hk|hm|hn|hr|ht|hu|id|ie|il|im|in|io|iq|ir|is|it|je|jm|jo|jp|ke|kg|kh|ki|km|kn|kp|kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|lu|lv|ly|ma|mc|md|me|mg|mh|mk|ml|mn|mn|mo|mp|mr|ms|mt|mu|mv|mw|mx|my|mz|na|nc|ne|nf|ng|ni|nl|no|np|nr|nu|nz|nom|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|pt|pw|py|qa|re|ra|rs|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sj|sk|sl|sm|sn|so|sr|st|su|sv|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|ug|uk|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|yu|za|zm|zw|arpa)(:[0-9]+)?((\/([~0-9a-zA-Z\#\+\%@\.\/_-]+))?(\?[0-9a-zA-Z\+\%@\/&\[\];=_-]+)?)?))\b/imuS');
 
 CREATE DOMAIN user_type VARCHAR(10) CHECK (VALUE IN ('normal', 'instructor'));
 
-CREATE TABLE xxx
-(
-  col "e-mail"
-);
-
-INSERT INTO xxx VALUES ('rasoul.am1376@gmail.com');
-
-DROP TABLE xxx;
+CREATE DOMAIN "time" VARCHAR(5) CHECK (VALUE ~ '^[0-2][0-3]:[0-5][0-9]$');
 
 CREATE TABLE public."user"
 (
     username VARCHAR(15) PRIMARY KEY NOT NULL,
     password VARCHAR(22) NOT NULL,
     name VARCHAR(15) NOT NULL,
-    age INTEGER,
+    age age,
     country VARCHAR(20),
-    "e-mail" VARCHAR(50) NOT NULL,
+    "e-mail" "e-mail",
     published_posts INTEGER DEFAULT 0 NOT NULL,
-    profile_pics VARCHAR(255)
+    profile_pics url
 );
 CREATE UNIQUE INDEX "user_e-mail_uindex" ON public."user" ("e-mail");
 
@@ -34,7 +27,7 @@ CREATE UNIQUE INDEX "user_e-mail_uindex" ON public."user" ("e-mail");
 
 CREATE TABLE public.admin
 (
-    username VARCHAR(17) PRIMARY KEY NOT NULL,
+    username VARCHAR(15) PRIMARY KEY NOT NULL,
     CONSTRAINT admin_username_fkey FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -43,9 +36,9 @@ CREATE TABLE public.admin
 CREATE TABLE public.other
 (
     username VARCHAR(15) PRIMARY KEY NOT NULL,
-    type BOOLEAN DEFAULT false NOT NULL,
-    membership_started VARCHAR(10) NOT NULL,
-    membership_expiry VARCHAR(10) NOT NULL,
+    type user_type,
+    membership_started date NOT NULL,
+    membership_expiry date NOT NULL,
     CONSTRAINT other_user_username_fk FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -62,7 +55,8 @@ CREATE TABLE public.lesson
 CREATE TABLE public.request
 (
     id VARCHAR(6) PRIMARY KEY NOT NULL,
-    submission_time VARCHAR(12) NOT NULL
+    submission_date date NOT NULL ,
+    submission_time time NOT NULL
 );
 
 
@@ -84,15 +78,13 @@ CREATE TABLE public.post
 (
     id VARCHAR(6) PRIMARY KEY NOT NULL,
     context VARCHAR(512) NOT NULL,
-    publish_date_day INTEGER NOT NULL,
-    publish_date_month INTEGER NOT NULL,
-    publish_date_year INTEGER NOT NULL,
-    publish_time VARCHAR(5) NOT NULL,
-    last_edit INTEGER DEFAULT 1 NOT NULL,
+    publish_date_date date NOT NULL,
+    publish_time time NOT NULL,
+    last_edit date,
     likes INTEGER DEFAULT 0 NOT NULL,
     username VARCHAR(22) NOT NULL,
     lesson_id VARCHAR(6) NOT NULL,
-    topic_name VARCHAR(6) NOT NULL,
+    topic_name VARCHAR(15) NOT NULL,
     CONSTRAINT post_user_username_fk FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT post_topic_lesson_fk FOREIGN KEY (lesson_id, topic_name) REFERENCES topic (lesson_id, name) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -102,7 +94,7 @@ CREATE TABLE public.post
 CREATE TABLE public.sample_test
 (
     id VARCHAR(6) PRIMARY KEY NOT NULL,
-    date VARCHAR(10),
+    date date,
     uni_held VARCHAR(40),
     "#_of_questions" INTEGER,
     lesson_id VARCHAR(6) NOT NULL,
@@ -134,7 +126,8 @@ CREATE TABLE public."like"
 (
     user_username VARCHAR(15) NOT NULL,
     post_id VARCHAR(6) NOT NULL,
-    time VARCHAR(14) NOT NULL,
+    date date NOT NULL ,
+    time time NOT NULL,
     CONSTRAINT like_pkey PRIMARY KEY (user_username, post_id),
     CONSTRAINT like_post_id_fk FOREIGN KEY (user_username) REFERENCES post (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT like_user_username_fk FOREIGN KEY (user_username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE
@@ -147,7 +140,8 @@ CREATE TABLE public.bookmark
 (
     user_username VARCHAR(15) NOT NULL,
     post_id VARCHAR(6) NOT NULL,
-    time VARCHAR(14) NOT NULL,
+    date date NOT NULL,
+    time time NOT NULL,
     CONSTRAINT bookmark_user_username_post_id_pk PRIMARY KEY (user_username, post_id),
     CONSTRAINT bookmark_user_username_fk FOREIGN KEY (user_username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT bookmark_post_id_fk FOREIGN KEY (post_id) REFERENCES post (id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -181,7 +175,7 @@ CREATE UNIQUE INDEX book_isbn_uindex ON public.book (isbn);
 CREATE TABLE public.handout
 (
     content_id VARCHAR(8) PRIMARY KEY NOT NULL,
-    "#of_pages" INT DEFAULT 1 NOT NULL,
+    "#of_pages" INT DEFAULT 0 NOT NULL,
     CONSTRAINT handout_content_id_fk FOREIGN KEY (content_id) REFERENCES content (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -229,7 +223,8 @@ CREATE TABLE public."check"
 (
     admin_username VARCHAR(15) NOT NULL,
     request_id VARCHAR(6) NOT NULL,
-    check_time VARCHAR(14),
+    date date,
+    time time,
     result BOOLEAN,
     CONSTRAINT check_admin_username_request_id_pk PRIMARY KEY (admin_username, request_id),
     CONSTRAINT check_admin_username_fk FOREIGN KEY (admin_username) REFERENCES admin (username) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -242,7 +237,8 @@ CREATE TABLE public.enroll
 (
     coures_id VARCHAR(6) NOT NULL,
     other_username VARCHAR(15) NOT NULL,
-    enrollment_date VARCHAR(14),
+    date date,
+    time time,
     CONSTRAINT enroll_coures_id_other_username_pk PRIMARY KEY (coures_id, other_username),
     CONSTRAINT enroll_course_id_fk FOREIGN KEY (coures_id) REFERENCES course (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT enroll_other_username_fk FOREIGN KEY (other_username) REFERENCES other (username) ON DELETE CASCADE ON UPDATE CASCADE
