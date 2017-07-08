@@ -229,3 +229,14 @@ CREATE TABLE public.enroll
     CONSTRAINT enroll_course_id_fk FOREIGN KEY (coures_id) REFERENCES course (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT enroll_other_username_fk FOREIGN KEY (other_username) REFERENCES other (username) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+
+
+CREATE TABLE public.reference
+(
+    content_id VARCHAR(10) NOT NULL,
+    course_id VARCHAR(6) NOT NULL,
+    CONSTRAINT reference_content_id_course_id_pk PRIMARY KEY (content_id, course_id),
+    CONSTRAINT reference_content_id_fk FOREIGN KEY (content_id) REFERENCES content (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT reference_course_id_fk FOREIGN KEY (course_id) REFERENCES course (id) ON DELETE CASCADE ON UPDATE CASCADE
+);
