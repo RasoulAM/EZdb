@@ -1,5 +1,4 @@
 
-
 CREATE TABLE public."user"
 (
     username VARCHAR(15) PRIMARY KEY NOT NULL,
@@ -14,11 +13,13 @@ CREATE TABLE public."user"
 CREATE UNIQUE INDEX "user_e-mail_uindex" ON public."user" ("e-mail");
 
 
+
 CREATE TABLE public.admin
 (
     username VARCHAR(17) PRIMARY KEY NOT NULL,
     CONSTRAINT admin_username_fkey FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
 
 
 CREATE TABLE public.other
@@ -31,6 +32,7 @@ CREATE TABLE public.other
 );
 
 
+
 CREATE TABLE public.lesson
 (
     id VARCHAR(6) PRIMARY KEY NOT NULL,
@@ -38,11 +40,13 @@ CREATE TABLE public.lesson
 );
 
 
+
 CREATE TABLE public.request
 (
     id VARCHAR(6) PRIMARY KEY NOT NULL,
     submission_time VARCHAR(12) NOT NULL
 );
+
 
 
 CREATE TABLE public.topic
@@ -55,6 +59,7 @@ CREATE TABLE public.topic
     CONSTRAINT topic_lesson_id_fk FOREIGN KEY (lesson_id) REFERENCES lesson (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE UNIQUE INDEX topic_lesson_id_name_uindex ON public.topic (lesson_id, name);
+
 
 
 CREATE TABLE public.post
@@ -74,6 +79,8 @@ CREATE TABLE public.post
     CONSTRAINT post_topic_lesson_fk FOREIGN KEY (lesson_id, topic_name) REFERENCES topic (lesson_id, name) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+
+
 CREATE TABLE public.sample_test
 (
     id VARCHAR(6) PRIMARY KEY NOT NULL,
@@ -83,6 +90,7 @@ CREATE TABLE public.sample_test
     lesson_id VARCHAR(6) NOT NULL,
     CONSTRAINT sample_test_lesson_lesson_id_fk FOREIGN KEY (lesson_id) REFERENCES lesson (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
 
 
 CREATE TABLE public.question
@@ -95,13 +103,13 @@ CREATE TABLE public.question
 
 
 
-
 CREATE TABLE public.answer
 (
     post_id VARCHAR(6) PRIMARY KEY NOT NULL,
     question_id VARCHAR(6) NOT NULL,
     CONSTRAINT answer_question_post_id_fk FOREIGN KEY (question_id) REFERENCES question (post_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
 
 
 CREATE TABLE public."like"
@@ -117,3 +125,75 @@ CREATE INDEX like_user_username_post_id_index ON public."like" (user_username, p
 
 
 
+CREATE TABLE public.bookmark
+(
+    user_username VARCHAR(15) NOT NULL,
+    post_id VARCHAR(6) NOT NULL,
+    time VARCHAR(14) NOT NULL,
+    CONSTRAINT bookmark_user_username_post_id_pk PRIMARY KEY (user_username, post_id),
+    CONSTRAINT bookmark_user_username_fk FOREIGN KEY (user_username) REFERENCES "user" (username),
+    CONSTRAINT bookmark_post_id_fk FOREIGN KEY (post_id) REFERENCES post (id)
+);
+CREATE UNIQUE INDEX bookmark_user_username_post_id_pk ON public.bookmark (user_username, post_id);
+
+
+
+CREATE TABLE public.content
+(
+    id VARCHAR(8) PRIMARY KEY NOT NULL,
+    title VARCHAR(20) NOT NULL,
+    author VARCHAR(30) NOT NULL,
+    stock INT DEFAULT 0 NOT NULL,
+    price VARCHAR(6) NOT NULL,
+    share_username VARCHAR(15) NOT NULL,
+    CONSTRAINT content_user_username_fk FOREIGN KEY (share_username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+
+-------*****chera moghe ezafe kardan foreign key khodesh auto complete nakard? shayad ghalat bashe
+CREATE TABLE public.book
+(
+    content_id VARCHAR(8) PRIMARY KEY NOT NULL,
+    isbn VARCHAR(16) NOT NULL,
+    publisher VARCHAR(20) NOT NULL,
+    edition INT DEFAULT 1 NOT NULL,
+    CONSTRAINT book_content_id_fk FOREIGN KEY (content_id) REFERENCES content (id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE UNIQUE INDEX book_isbn_uindex ON public.book (isbn);
+
+
+
+CREATE TABLE public.handout
+(
+    content_id VARCHAR(8) PRIMARY KEY NOT NULL,
+    "#of_pages" INT DEFAULT 1 NOT NULL
+);
+
+
+
+CREATE TABLE public.course
+(
+    id VARCHAR(8) PRIMARY KEY NOT NULL,
+    title VARCHAR(12) NOT NULL,
+    schedule VARCHAR(16) NOT NULL,
+    capacity INT DEFAULT 1 NOT NULL,
+    attendee INT DEFAULT 1 NOT NULL,
+    "#of_sessions" INT DEFAULT 1 NOT NULL,
+    price VARCHAR(6) NOT NULL,
+    lesson_id VARCHAR(6),
+    inst_other_username VARCHAR(15) NOT NULL,
+    CONSTRAINT course_user_username_fk FOREIGN KEY (inst_other_username) REFERENCES "user" (username),
+    CONSTRAINT course_lesson_id_fk FOREIGN KEY (lesson_id) REFERENCES lesson (id)
+);
+
+
+
+    CREATE TABLE public.start_course
+(
+    request_id VARCHAR(6) PRIMARY KEY NOT NULL,
+    submit_other_user VARCHAR(15) NOT NULL,
+    submit_lesson_id VARCHAR(6) NOT NULL,
+    CONSTRAINT start_course_request_id_fk FOREIGN KEY (request_id) REFERENCES request (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT start_course_other_username_fk FOREIGN KEY (submit_other_user) REFERENCES other (username) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT start_course_lesson_id_fk FOREIGN KEY (submit_lesson_id) REFERENCES lesson (id) ON DELETE CASCADE ON UPDATE CASCADE
+);
