@@ -179,8 +179,8 @@ CREATE TABLE public.course
     price VARCHAR(6) NOT NULL,
     lesson_id VARCHAR(6),
     instructor_other_username VARCHAR(15) NOT NULL,
-    CONSTRAINT course_user_username_fk FOREIGN KEY (instructor_other_username) REFERENCES "user" (username),
-    CONSTRAINT course_lesson_id_fk FOREIGN KEY (lesson_id) REFERENCES lesson (id)
+    CONSTRAINT course_user_username_fk FOREIGN KEY (instructor_other_username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT course_lesson_id_fk FOREIGN KEY (lesson_id) REFERENCES lesson (id) ON DELETE CASCADE ON UPDATE CASCADE
 
 );
 
