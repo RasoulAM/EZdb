@@ -1,4 +1,5 @@
 
+
 CREATE TABLE public."user"
 (
     username VARCHAR(15) PRIMARY KEY NOT NULL,
