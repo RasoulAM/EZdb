@@ -33,13 +33,13 @@ CREATE TABLE public.admin
 
 
 
-CREATE TABLE public.other
+CREATE TABLE public.normal
 (
     username VARCHAR(15) PRIMARY KEY NOT NULL,
     type user_type,
     membership_started date NOT NULL,
     membership_expiry date NOT NULL,
-    CONSTRAINT other_user_username_fk FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT normal_user_username_fk FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 
@@ -190,8 +190,8 @@ CREATE TABLE public.course
     "#of_sessions" INT DEFAULT 1 NOT NULL,
     price VARCHAR(6) NOT NULL,
     lesson_id VARCHAR(6),
-    instructor_other_username VARCHAR(15) NOT NULL,
-    CONSTRAINT course_user_username_fk FOREIGN KEY (instructor_other_username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
+    instructor_normal_username VARCHAR(15) NOT NULL,
+    CONSTRAINT course_user_username_fk FOREIGN KEY (instructor_normal_username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT course_lesson_id_fk FOREIGN KEY (lesson_id) REFERENCES lesson (id) ON DELETE CASCADE ON UPDATE CASCADE
 
 );
@@ -201,10 +201,10 @@ CREATE TABLE public.course
 CREATE TABLE public.start_course
 (
     request_id VARCHAR(6) PRIMARY KEY NOT NULL,
-    submit_other_user VARCHAR(15) NOT NULL,
+    submit_normal_user VARCHAR(15) NOT NULL,
     submit_lesson_id VARCHAR(6) NOT NULL,
     CONSTRAINT start_course_request_id_fk FOREIGN KEY (request_id) REFERENCES request (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT start_course_other_username_fk FOREIGN KEY (submit_other_user) REFERENCES other (username) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT start_course_normal_username_fk FOREIGN KEY (submit_normal_user) REFERENCES normal (username) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT start_course_lesson_id_fk FOREIGN KEY (submit_lesson_id) REFERENCES lesson (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -213,7 +213,7 @@ CREATE TABLE public.start_course
 CREATE TABLE public.upgrade
 (
     request_id VARCHAR(6) PRIMARY KEY NOT NULL,
-    submit_other_user VARCHAR(15) NOT NULL,
+    submit_normal_user VARCHAR(15) NOT NULL,
     CONSTRAINT upgrade_request_id_fk FOREIGN KEY (request_id) REFERENCES request (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -236,12 +236,12 @@ CREATE TABLE public."check"
 CREATE TABLE public.enroll
 (
     coures_id VARCHAR(6) NOT NULL,
-    other_username VARCHAR(15) NOT NULL,
+    normal_username VARCHAR(15) NOT NULL,
     date date,
     time time,
-    CONSTRAINT enroll_coures_id_other_username_pk PRIMARY KEY (coures_id, other_username),
+    CONSTRAINT enroll_coures_id_normal_username_pk PRIMARY KEY (coures_id, normal_username),
     CONSTRAINT enroll_course_id_fk FOREIGN KEY (coures_id) REFERENCES course (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT enroll_other_username_fk FOREIGN KEY (other_username) REFERENCES other (username) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT enroll_normal_username_fk FOREIGN KEY (normal_username) REFERENCES normal (username) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 
@@ -254,3 +254,4 @@ CREATE TABLE public.reference
     CONSTRAINT reference_content_id_fk FOREIGN KEY (content_id) REFERENCES content (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT reference_course_id_fk FOREIGN KEY (course_id) REFERENCES course (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
