@@ -131,8 +131,8 @@ CREATE TABLE public.bookmark
     post_id VARCHAR(6) NOT NULL,
     time VARCHAR(14) NOT NULL,
     CONSTRAINT bookmark_user_username_post_id_pk PRIMARY KEY (user_username, post_id),
-    CONSTRAINT bookmark_user_username_fk FOREIGN KEY (user_username) REFERENCES "user" (username),
-    CONSTRAINT bookmark_post_id_fk FOREIGN KEY (post_id) REFERENCES post (id)
+    CONSTRAINT bookmark_user_username_fk FOREIGN KEY (user_username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT bookmark_post_id_fk FOREIGN KEY (post_id) REFERENCES post (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 
@@ -181,6 +181,7 @@ CREATE TABLE public.course
     instructor_other_username VARCHAR(15) NOT NULL,
     CONSTRAINT course_user_username_fk FOREIGN KEY (instructor_other_username) REFERENCES "user" (username),
     CONSTRAINT course_lesson_id_fk FOREIGN KEY (lesson_id) REFERENCES lesson (id)
+
 );
 
 
