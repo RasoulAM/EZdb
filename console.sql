@@ -435,3 +435,25 @@ CREATE TRIGGER add_content_before_add_handout
     EXECUTE PROCEDURE add_content();
 
 
+CREATE OR REPLACE FUNCTION attend_failure()
+    RETURNS TRIGGER AS $not_attend_in_own$
+        BEGIN
+            IF new.username IN (SELECT username FROM non_admin NATURAL JOIN enroll AS S
+                WHERE type = 'instructor' AND new.username = S.username)
+                THEN RAISE EXCEPTION 'not permitted';
+            END IF;
+        END;
+        $not_attend_in_own$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER not_attend_in_own
+    BEFORE INSERT ON enroll
+    FOR EACH ROW
+    EXECUTE PROCEDURE attend_failure();
+
+
+
+INSERT INTO non_admin VALUES ('hso', 'rtyui', 'hose', 'hos@gmail.com', 'instructor', '1/1/97', '3/1/98');
+INSERT INTO course VALUES ('40101', 'amar', 'fjlkah', 40, 20, 10, '100', '401', 'hso')
+INSERT INTO lesson VALUES ('401', 'amar');
+INSERT INTO enroll VALUES ('1647', 'hso', '4/5/98', '14:38')
