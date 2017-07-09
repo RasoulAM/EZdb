@@ -214,7 +214,8 @@ CREATE TABLE public.upgrade
 (
     request_id VARCHAR(6) PRIMARY KEY NOT NULL,
     submit_non_admin_user VARCHAR(15) NOT NULL,
-    CONSTRAINT upgrade_request_id_fk FOREIGN KEY (request_id) REFERENCES request (id) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT upgrade_request_id_fk FOREIGN KEY (request_id) REFERENCES request (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT upgrade_non_admin_username_fk FOREIGN KEY (submit_non_admin_user) REFERENCES non_admin (username) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 
@@ -254,4 +255,46 @@ CREATE TABLE public.reference
     CONSTRAINT reference_content_id_fk FOREIGN KEY (content_id) REFERENCES content (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT reference_course_id_fk FOREIGN KEY (course_id) REFERENCES course (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+
+CREATE OR REPLACE FUNCTION failure_message()
+    RETURNS TRIGGER AS
+    ' BEGIN IF new.instructor_non_admin_username NOT IN (SELECT username
+                                                         FROM non_admin
+                                                         WHERE type = ''instructor'') THEN RAISE EXCEPTION ''not permitted'' ; END IF; RETURN new; END ' LANGUAGE plpgsql;
+
+
+
+CREATE TRIGGER course_held_by_instructor
+    BEFORE INSERT ON course
+    FOR EACH ROW
+    EXECUTE PROCEDURE failure_message();
+
+
+INSERT INTO "user" VALUES ('ccc', 'aaa', 'ras', 12, 'iran', 'ral.am1376@gmail.com',0,NULL);
+
+INSERT INTO non_admin VALUES ('bbb', 'instructor','1/1/2000','1/1/2000');
+
+INSERT INTO lesson VALUES('111', 'asd') ;
+
+INSERT INTO course VALUES ('100', 'asdf', 'asfd', 0, 0, 0, 'aa', '111', 'bbb');
+
+CREATE OR REPLACE FUNCTION update_user_type_procedure()
+    RETURNS TRIGGER AS
+    ' BEGIN UPDATE non_admin SET type=''instructor'' WHERE non_admin.username IN (SELECT submit_non_admin_user FROM upgrade NATURAL JOIN "check" WHERE "check".request_id=upgrade.request_id AND result=TRUE);  RETURN new; END ' LANGUAGE plpgsql;
+
+
+CREATE TRIGGER request_acception
+    AFTER UPDATE OF result ON "check"
+    EXECUTE PROCEDURE update_user_type_procedure();
+
+INSERT INTO request VALUES ('11111','01/01/2000','07:00');
+
+INSERT INTO upgrade VALUES ('11111','aaa');
+
+INSERT INTO admin VALUES ('ccc');
+
+INSERT INTO "check" VALUES ('ccc', '11111', '01/01/2000','07:00', NULL );
+
+UPDATE "check" SET result=TRUE WHERE ("check".request_id='11111');
 
