@@ -271,47 +271,42 @@ CREATE OR REPLACE FUNCTION failure_message()
                                                          FROM non_admin
                                                          WHERE type = ''instructor'') THEN RAISE EXCEPTION ''not permitted'' ; END IF; RETURN new; END ' LANGUAGE plpgsql;
 
-
-
 CREATE TRIGGER course_held_by_instructor
     BEFORE INSERT ON course
     FOR EACH ROW
     EXECUTE PROCEDURE failure_message();
 
 
-INSERT INTO "user" VALUES ('ccc', 'aaa', 'ras', 12, 'iran', 'ral.am1376@gmail.com',0,NULL);
-
-INSERT INTO non_admin VALUES ('bbb', 'instructor','1/1/2000','1/1/2000');
-
-INSERT INTO lesson VALUES('111', 'asd') ;
-
-INSERT INTO course VALUES ('100', 'asdf', 'asfd', 0, 0, 0, 'aa', '111', 'bbb');
 
 CREATE OR REPLACE FUNCTION update_user_type_procedure()
     RETURNS TRIGGER AS
     ' BEGIN UPDATE non_admin SET type=''instructor'' WHERE non_admin.username IN (SELECT submit_non_admin_user FROM upgrade NATURAL JOIN "check" WHERE "check".request_id=upgrade.request_id AND result=TRUE);  RETURN new; END ' LANGUAGE plpgsql;
-
 
 CREATE TRIGGER request_acception
     AFTER UPDATE OF result ON "check"
     EXECUTE PROCEDURE update_user_type_procedure();
 
 
-INSERT INTO request VALUES ('11111','01/01/2000','07:00');
-
-INSERT INTO upgrade VALUES ('11111','aaa');
-
-INSERT INTO admin VALUES ('ccc');
-
-INSERT INTO "check" VALUES ('ccc', '11111', '01/01/2000','07:00', NULL );
-
-UPDATE "check" SET result=TRUE WHERE ("check".request_id='11111');
-
 CREATE OR REPLACE FUNCTION can_not_change_user()
     RETURNS TRIGGER AS
-    '  RAISE EXCEPTION '' can not change user ''; END ' LANGUAGE plpgsql;
-
+    '  BEGIN RAISE EXCEPTION ''can not change user''; END ' LANGUAGE plpgsql;
 
 CREATE TRIGGER can_not_change_user
     BEFORE UPDATE ON "user"
-    EXECUTE PROCEDURE can_not_change_user()
+    EXECUTE PROCEDURE can_not_change_user();
+
+
+CREATE OR REPLACE FUNCTION add_user()
+    RETURNS TRIGGER AS
+    'BEGIN INSERT INTO "user" VALUES (new.username,new.password,new.name, NULL ,NULL ,new."e-mail", 0 ,NULL); RETURN new ;END ' LANGUAGE plpgsql;
+
+CREATE TRIGGER add_user_before_add_non_admin
+    BEFORE INSERT ON non_admin
+    FOR EACH ROW
+    EXECUTE PROCEDURE add_user();
+
+CREATE TRIGGER add_user_before_add_admin
+    BEFORE INSERT ON admin
+    FOR EACH ROW
+    EXECUTE PROCEDURE add_user();
+
