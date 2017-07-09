@@ -298,3 +298,11 @@ INSERT INTO "check" VALUES ('ccc', '11111', '01/01/2000','07:00', NULL );
 
 UPDATE "check" SET result=TRUE WHERE ("check".request_id='11111');
 
+CREATE OR REPLACE FUNCTION can_not_change_user()
+    RETURNS TRIGGER AS
+    '  RAISE EXCEPTION '' can not change user ''; END ' LANGUAGE plpgsql;
+
+
+CREATE TRIGGER can_not_change_user
+    BEFORE UPDATE ON "user"
+    EXECUTE PROCEDURE can_not_change_user()
