@@ -212,14 +212,14 @@ CREATE TABLE public.handout
 
 CREATE TABLE public.course
 (
-    id VARCHAR(8) PRIMARY KEY NOT NULL,
-    title VARCHAR(12) NOT NULL,
+    id VARCHAR(6) PRIMARY KEY NOT NULL,
+    title VARCHAR(12),
     schedule VARCHAR(16),
     capacity INT DEFAULT 0,
     attendee INT DEFAULT 0,
-    "#of_sessions" INT DEFAULT 1 NOT NULL,
-    price VARCHAR(6) NOT NULL,
-    lesson_id VARCHAR(6),
+    "#of_sessions" INT DEFAULT 1,
+    price VARCHAR(6),
+    lesson_id VARCHAR(6) NOT NULL ,
     instructor_non_admin_username VARCHAR(15) NOT NULL,
     CONSTRAINT course_user_username_fk FOREIGN KEY (instructor_non_admin_username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT course_lesson_id_fk FOREIGN KEY (lesson_id) REFERENCES lesson (id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -288,12 +288,16 @@ CREATE TABLE public.reference
     CONSTRAINT reference_course_id_fk FOREIGN KEY (course_id) REFERENCES course (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+------------                    --------------
+                --Triggers--
+------------                    --------------
+
 
 CREATE OR REPLACE FUNCTION failure_message()
     RETURNS TRIGGER AS $course_held_by_instructor$
     BEGIN
-        IF new.instructor_non_admin_username NOT IN (SELECT username FROM non_admin WHERE type = 'instructor') THEN
-            RAISE EXCEPTION 'not permitted' ;
+        IF new.submit_non_admin_user NOT IN (SELECT username FROM non_admin WHERE type = 'instructor') THEN
+            RAISE EXCEPTION 'you are not an instructor' ;
         END IF;
         RETURN new;
     END;
@@ -301,7 +305,7 @@ CREATE OR REPLACE FUNCTION failure_message()
 
 
 CREATE TRIGGER course_held_by_instructor
-    BEFORE INSERT ON course
+    BEFORE INSERT ON start_course
     FOR EACH ROW
     EXECUTE PROCEDURE failure_message();
 
@@ -309,10 +313,21 @@ CREATE TRIGGER course_held_by_instructor
 
 CREATE OR REPLACE FUNCTION update_user_type_procedure()
     RETURNS TRIGGER AS $request_acception$
+    DECLARE
+        a1 VARCHAR(6);
+        b1 VARCHAR(15);
     BEGIN
-        UPDATE non_admin SET type='instructor'
-            WHERE non_admin.username IN (SELECT submit_non_admin_user FROM upgrade NATURAL JOIN "check" WHERE "check".request_id=upgrade.request_id AND result=TRUE);
-        RETURN new;
+        a1:= (select submit_lesson_id from start_course, lesson WHERE start_course.submit_lesson_id = lesson.id);
+        b1:= (select name from non_admin, start_course where start_course.submit_non_admin_user = non_admin.username);
+
+        IF non_admin.username IN (SELECT submit_non_admin_user FROM upgrade NATURAL JOIN "check"
+            WHERE "check".request_id=upgrade.request_id AND result=TRUE)
+            THEN UPDATE non_admin SET type='instructor';
+        ELSEIF non_admin.username IN (SELECT submit_non_admin_user FROM start_course NATURAL JOIN "check"
+            WHERE "check".request_id=start_course.request_id AND result = TRUE)
+            THEN INSERT INTO course (lesson_id, instructor_non_admin_user) VALUES(a1, b1);
+        END IF;
+        RETURN NULL;
     END;
     $request_acception$ LANGUAGE plpgsql;
 
@@ -435,13 +450,47 @@ CREATE TRIGGER add_content_before_add_handout
     EXECUTE PROCEDURE add_content();
 
 
+-----------request is-a-----------------
+CREATE OR REPLACE FUNCTION can_not_change_request()
+    RETURNS TRIGGER AS $can_not_change_request$
+    BEGIN
+        RAISE EXCEPTION 'can not change request';
+        RETURN new;
+    END;
+    $can_not_change_request$ LANGUAGE plpgsql;
+
+CREATE TRIGGER can_not_change_request
+    BEFORE UPDATE ON request
+    EXECUTE PROCEDURE can_not_change_request();
+
+
+CREATE OR REPLACE FUNCTION add_request()
+    RETURNS TRIGGER AS $add_request_before_add_start_course$
+    BEGIN
+        INSERT INTO request VALUES (new.request_id, new.submission_time);
+        RETURN new;
+    END;
+    $add_request_before_add_start_course$ LANGUAGE plpgsql;
+
+CREATE TRIGGER add_request_before_add_start_course
+    BEFORE INSERT ON start_course
+    FOR EACH ROW
+    EXECUTE PROCEDURE add_request();
+
+CREATE TRIGGER add_request_before_add_upgrade
+    BEFORE INSERT ON upgrade
+    FOR EACH ROW
+    EXECUTE PROCEDURE add_request();
+
+
+
 CREATE OR REPLACE FUNCTION attend_failure()
     RETURNS TRIGGER AS $not_attend_in_own$
         BEGIN
             IF new.non_admin_username IN (SELECT username FROM non_admin, enroll AS S
---                 WHERE username = S.non_admin_username AND
-                WHERE type = 'instructor' AND new.non_admin_username = S.non_admin_username)
-                THEN RAISE EXCEPTION 'not permitted';
+                WHERE new.non_admin_username = S.non_admin_username AND
+                type = 'instructor')
+                THEN RAISE EXCEPTION 'you can''t attend in your own class';
             END IF;
             RETURN new;
         END;
@@ -454,7 +503,63 @@ CREATE TRIGGER not_attend_in_own
     EXECUTE PROCEDURE attend_failure();
 
 
-INSERT INTO non_admin VALUES ('hso', 'rtyui', 'hose', 'hos@gmail.com', 'instructor', '1/1/97', '3/1/98');
-INSERT INTO lesson VALUES ('401', 'amar');
-INSERT INTO course VALUES ('40101', 'amar', 'fjlkah', 40, 20, 10, '100', '401', 'hso');
-INSERT INTO enroll VALUES ('40101', 'hso', '4/5/98', '14:38');
+
+CREATE OR REPLACE FUNCTION upgrade_to_instructor()
+    RETURNS TRIGGER AS $non_admin_instructor$
+        BEGIN
+            IF new.submit_non_admin_user IN (SELECT username FROM non_admin
+                WHERE type = 'instructor')
+                THEN RAISE EXCEPTION 'you are not a normal non-admin user!';
+            END IF;
+
+        END;
+        $non_admin_instructor$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER non_admin_instructor
+    BEFORE INSERT ON upgrade
+    for EACH ROW
+    EXECUTE PROCEDURE upgrade_to_instructor();
+
+
+
+CREATE OR REPLACE FUNCTION pseudo_encrypt(VALUE int) returns BIGINT AS $$
+    DECLARE
+        l1 int;
+        l2 int;
+        r1 int;
+        r2 int;
+        i int:=0;
+    BEGIN
+        l1:= (VALUE >> 16) & 65535;
+        r1:= VALUE & 65535;
+        WHILE i < 3 LOOP
+            l2 := r1;
+            r2 := l1 # ((((1366.0 * r1 + 150889) % 714025) / 714025.0) * 32767)::int;
+            l1 := l2;
+            r1 := r2;
+            i := i + 1;
+        END LOOP;
+    RETURN ((l1::bigint << 16) + r1);
+END;
+$$ LANGUAGE plpgsql strict immutable;
+
+
+
+-- Create a sequence for generating the input to the pseudo_encrypt function
+create sequence random_int_seq;
+
+-- A function that increments the sequence above and generates a random integer
+create function make_random_id() returns bigint as $$
+    select pseudo_encrypt(nextval('random_int_seq')::int)
+$$ language sql;
+
+create table f (
+  -- the id column now has a random default ID
+  id integer primary key default make_random_id()
+);
+
+insert into f values (default);
+insert into f values (default);
+
+select * from f;
