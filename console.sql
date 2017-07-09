@@ -17,7 +17,7 @@ CREATE TABLE public."user"
     name VARCHAR(15) NOT NULL,
     age age,
     country VARCHAR(20),
-    "e-mail" "e-mail",
+    "e-mail" "e-mail" NOT NULL ,
     published_posts INTEGER DEFAULT 0 NOT NULL,
     profile_pics url
 );
@@ -28,19 +28,27 @@ CREATE UNIQUE INDEX "user_e-mail_uindex" ON public."user" ("e-mail");
 CREATE TABLE public.admin
 (
     username VARCHAR(15) PRIMARY KEY NOT NULL,
+    password VARCHAR(22) NOT NULL,
+    name VARCHAR(15) NOT NULL,
+    "e-mail" "e-mail" NOT NULL,
     CONSTRAINT admin_username_fkey FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE
 );
+CREATE UNIQUE INDEX "admin_e-mail_uindex" ON public.admin ("e-mail");
 
 
 
 CREATE TABLE public.non_admin
 (
     username VARCHAR(15) PRIMARY KEY NOT NULL,
+    password VARCHAR(22) NOT NULL,
+    name VARCHAR(15) NOT NULL,
+    "e-mail" "e-mail" NOT NULL,
     type user_type,
     membership_started date NOT NULL,
     membership_expiry date NOT NULL,
     CONSTRAINT non_admin_user_username_fk FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE
 );
+CREATE UNIQUE INDEX "non_admin_e-mail_uindex" ON public.admin ("e-mail");
 
 
 
@@ -240,7 +248,7 @@ CREATE TABLE public.enroll
     non_admin_username VARCHAR(15) NOT NULL,
     date date,
     time time,
-    CONSTRAINT enroll_coures_id_non_admin_username_pk PRIMARY KEY (coures_id, non_admin_username),
+    CONSTRAINT enroll_course_id_non_admin_username_pk PRIMARY KEY (coures_id, non_admin_username),
     CONSTRAINT enroll_course_id_fk FOREIGN KEY (coures_id) REFERENCES course (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT enroll_non_admin_username_fk FOREIGN KEY (non_admin_username) REFERENCES non_admin (username) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -287,6 +295,7 @@ CREATE OR REPLACE FUNCTION update_user_type_procedure()
 CREATE TRIGGER request_acception
     AFTER UPDATE OF result ON "check"
     EXECUTE PROCEDURE update_user_type_procedure();
+
 
 INSERT INTO request VALUES ('11111','01/01/2000','07:00');
 
