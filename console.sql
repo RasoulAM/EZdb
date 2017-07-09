@@ -297,8 +297,13 @@ CREATE TRIGGER can_not_change_user
 
 
 CREATE OR REPLACE FUNCTION add_user()
-    RETURNS TRIGGER AS
-    'BEGIN INSERT INTO "user" VALUES (new.username,new.password,new.name, NULL ,NULL ,new."e-mail", 0 ,NULL); RETURN new ;END ' LANGUAGE plpgsql;
+    RETURNS TRIGGER AS $name$
+    BEGIN
+        INSERT INTO "user" VALUES (new.username,new.password,new.name, NULL ,NULL ,new."e-mail", 0 ,NULL);
+        RETURN new ;
+    END
+    $name$ LANGUAGE plpgsql;
+
 
 CREATE TRIGGER add_user_before_add_non_admin
     BEFORE INSERT ON non_admin
@@ -310,3 +315,19 @@ CREATE TRIGGER add_user_before_add_admin
     FOR EACH ROW
     EXECUTE PROCEDURE add_user();
 
+CREATE OR REPLACE FUNCTION check_capacity()
+    RETURNS TRIGGER AS $enroll_if_has_capacity$
+        BEGIN
+            IF (SELECT attendee FROM enroll  NATURAL JOIN course WHERE coures_id=old.coures_id) >= 10 THEN
+                RAISE EXCEPTION 'course does not have capacity';
+            ELSE
+                RETURN new;
+            END IF ;
+        END;
+    $enroll_if_has_capacity$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER enroll_if_has_capacity
+    BEFORE INSERT ON enroll
+    FOR EACH ROW
+    EXECUTE PROCEDURE check_capacity();
