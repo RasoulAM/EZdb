@@ -452,8 +452,3 @@ CREATE TRIGGER not_attend_in_own
     EXECUTE PROCEDURE attend_failure();
 
 
-
-INSERT INTO non_admin VALUES ('hso', 'rtyui', 'hose', 'hos@gmail.com', 'instructor', '1/1/97', '3/1/98');
-INSERT INTO course VALUES ('40101', 'amar', 'fjlkah', 40, 20, 10, '100', '401', 'hso')
-INSERT INTO lesson VALUES ('401', 'amar');
-INSERT INTO enroll VALUES ('1647', 'hso', '4/5/98', '14:38')
