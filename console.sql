@@ -290,10 +290,15 @@ CREATE TABLE public.reference
 
 
 CREATE OR REPLACE FUNCTION failure_message()
-    RETURNS TRIGGER AS
-    ' BEGIN IF new.instructor_non_admin_username NOT IN (SELECT username
-                                                         FROM non_admin
-                                                         WHERE type = ''instructor'') THEN RAISE EXCEPTION ''not permitted'' ; END IF; RETURN new; END ' LANGUAGE plpgsql;
+    RETURNS TRIGGER AS $course_held_by_instructor$
+    BEGIN
+        IF new.instructor_non_admin_username NOT IN (SELECT username FROM non_admin WHERE type = 'instructor') THEN
+            RAISE EXCEPTION 'not permitted' ;
+        END IF;
+        RETURN new;
+    END;
+    $course_held_by_instructor$ LANGUAGE plpgsql;
+
 
 CREATE TRIGGER course_held_by_instructor
     BEFORE INSERT ON course
@@ -303,8 +308,13 @@ CREATE TRIGGER course_held_by_instructor
 
 
 CREATE OR REPLACE FUNCTION update_user_type_procedure()
-    RETURNS TRIGGER AS
-    ' BEGIN UPDATE non_admin SET type=''instructor'' WHERE non_admin.username IN (SELECT submit_non_admin_user FROM upgrade NATURAL JOIN "check" WHERE "check".request_id=upgrade.request_id AND result=TRUE);  RETURN new; END ' LANGUAGE plpgsql;
+    RETURNS TRIGGER AS $request_acception$
+    BEGIN
+        UPDATE non_admin SET type='instructor'
+            WHERE non_admin.username IN (SELECT submit_non_admin_user FROM upgrade NATURAL JOIN "check" WHERE "check".request_id=upgrade.request_id AND result=TRUE);
+        RETURN new;
+    END;
+    $request_acception$ LANGUAGE plpgsql;
 
 CREATE TRIGGER request_acception
     AFTER UPDATE OF result ON "check"
@@ -313,8 +323,11 @@ CREATE TRIGGER request_acception
 -------------user is-a-----------------
 
 CREATE OR REPLACE FUNCTION can_not_change_user()
-    RETURNS TRIGGER AS
-    '  BEGIN RAISE EXCEPTION ''can not change user''; END ' LANGUAGE plpgsql;
+    RETURNS TRIGGER AS $can_not_change_user$
+    BEGIN
+        RAISE EXCEPTION 'can not change user';
+    END;
+    $can_not_change_user$ LANGUAGE plpgsql;
 
 CREATE TRIGGER can_not_change_user
     BEFORE UPDATE ON "user"
@@ -344,7 +357,7 @@ CREATE TRIGGER add_user_before_add_admin
 CREATE OR REPLACE FUNCTION check_capacity()
     RETURNS TRIGGER AS $enroll_if_has_capacity$
         BEGIN
-            IF (SELECT attendee FROM enroll  NATURAL JOIN course WHERE coures_id=old.coures_id) >= 10 THEN
+            IF (SELECT attendee FROM enroll  NATURAL JOIN course WHERE coures_id=new.coures_id) >= (SELECT capacity FROM enroll  NATURAL JOIN course WHERE coures_id=new.coures_id) THEN
                 RAISE EXCEPTION 'course does not have capacity';
             ELSE
                 RETURN new;
@@ -360,8 +373,11 @@ CREATE TRIGGER enroll_if_has_capacity
 
 -----------post is-a-----------------
 CREATE OR REPLACE FUNCTION can_not_change_post()
-    RETURNS TRIGGER AS
-    '  BEGIN RAISE EXCEPTION ''can not change post''; END ' LANGUAGE plpgsql;
+    RETURNS TRIGGER AS $can_not_change_post$
+    BEGIN
+        RAISE EXCEPTION 'can not change post';
+    END;
+    $can_not_change_post$ LANGUAGE plpgsql;
 
 CREATE TRIGGER can_not_change_post
     BEFORE UPDATE ON post
@@ -369,8 +385,12 @@ CREATE TRIGGER can_not_change_post
 
 
 CREATE OR REPLACE FUNCTION add_post()
-    RETURNS TRIGGER AS
-    'BEGIN INSERT INTO post VALUES (new.id, new.context, new.publish_date, new.publish_time, new.last_edit, new.username, new.lesson_id, new.topic_name); RETURN new ;END ' LANGUAGE plpgsql;
+    RETURNS TRIGGER AS $add_post_before_add_question$
+    BEGIN
+        INSERT INTO post VALUES (new.post_id, new.context, new.publish_date, new.publish_time, new.last_edit, new.username, new.lesson_id, new.topic_name);
+        RETURN new;
+    END;
+    $add_post_before_add_question$ LANGUAGE plpgsql;
 
 CREATE TRIGGER add_post_before_add_question
     BEFORE INSERT ON question
@@ -384,8 +404,12 @@ CREATE TRIGGER add_post_before_add_answer
 
 -----------content is-a-----------------
 CREATE OR REPLACE FUNCTION can_not_change_content()
-    RETURNS TRIGGER AS
-    '  BEGIN RAISE EXCEPTION ''can not change content''; RETURN new; END ' LANGUAGE plpgsql;
+    RETURNS TRIGGER AS $can_not_change_content$
+    BEGIN
+        RAISE EXCEPTION 'can not change content';
+        RETURN new;
+    END;
+    $can_not_change_content$ LANGUAGE plpgsql;
 
 CREATE TRIGGER can_not_change_content
     BEFORE UPDATE ON content
@@ -393,8 +417,12 @@ CREATE TRIGGER can_not_change_content
 
 
 CREATE OR REPLACE FUNCTION add_content()
-    RETURNS TRIGGER AS
-    'BEGIN INSERT INTO content VALUES (new.content_id, new.title, NULL, NULL, NULL, new.share_username); RETURN new ;END ' LANGUAGE plpgsql;
+    RETURNS TRIGGER AS $add_content_before_add_book$
+    BEGIN
+        INSERT INTO content VALUES (new.content_id, new.title, NULL, NULL, NULL, new.share_username);
+        RETURN new;
+    END;
+    $add_content_before_add_book$ LANGUAGE plpgsql;
 
 CREATE TRIGGER add_content_before_add_book
     BEFORE INSERT ON book
@@ -406,8 +434,4 @@ CREATE TRIGGER add_content_before_add_handout
     FOR EACH ROW
     EXECUTE PROCEDURE add_content();
 
-INSERT INTO non_admin VALUES ('aaa', 'abcd', 'ali', 're@f.v', 'normal', '14/10/75' , '3/1/1997');
-UPDATE "user" SET name = 'hoo' WHERE username = 'aaa';
-INSERT INTO book VALUES ('12345', 'salam', '1321654984', NULL, 1, 'aaa');
-INSERT INTO book VALUES ('12346', 'sal', '1324561984', 'kar', 3, 'aaa');
-UPDATE content SET title = 'hoo' WHERE id = '12345'
+
