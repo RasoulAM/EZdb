@@ -63,7 +63,6 @@ CREATE TABLE public.lesson
 CREATE TABLE public.request
 (
     id VARCHAR(6) PRIMARY KEY NOT NULL,
-    submission_date date NOT NULL ,
     submission_time time NOT NULL
 );
 
@@ -86,10 +85,9 @@ CREATE TABLE public.post
 (
     id VARCHAR(6) PRIMARY KEY NOT NULL,
     context VARCHAR(512) NOT NULL,
-    publish_date_date date NOT NULL,
+    publish_date date NOT NULL,
     publish_time time NOT NULL,
-    last_edit date,
-    likes INTEGER DEFAULT 0 NOT NULL,
+    last_edit date NOT NULL,
     username VARCHAR(22) NOT NULL,
     lesson_id VARCHAR(6) NOT NULL,
     topic_name VARCHAR(15) NOT NULL,
@@ -114,9 +112,18 @@ CREATE TABLE public.sample_test
 CREATE TABLE public.question
 (
     post_id VARCHAR(6) PRIMARY KEY NOT NULL,
+    context VARCHAR(512) NOT NULL,
+    publish_date date NOT NULL,
+    publish_time time NOT NULL,
+    last_edit date NOT NULL,
+    username VARCHAR(22) NOT NULL,
+    lesson_id VARCHAR(6) NOT NULL,
+    topic_name VARCHAR(15) NOT NULL,
     title VARCHAR(50) NOT NULL,
     sample_test_id VARCHAR(6),
-    CONSTRAINT question_sample_test_id_fk FOREIGN KEY (sample_test_id) REFERENCES sample_test (id) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT question_sample_test_id_fk FOREIGN KEY (sample_test_id) REFERENCES sample_test (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT question_user_username_fk FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT question_topic_lesson_fk FOREIGN KEY (lesson_id, topic_name) REFERENCES topic (lesson_id, name) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 
@@ -124,8 +131,17 @@ CREATE TABLE public.question
 CREATE TABLE public.answer
 (
     post_id VARCHAR(6) PRIMARY KEY NOT NULL,
+    context VARCHAR(512) NOT NULL,
+    publish_date date NOT NULL,
+    publish_time time NOT NULL,
+    last_edit date NOT NULL,
+    username VARCHAR(22) NOT NULL,
+    lesson_id VARCHAR(6) NOT NULL,
+    topic_name VARCHAR(15) NOT NULL,
     question_id VARCHAR(6) NOT NULL,
-    CONSTRAINT answer_question_post_id_fk FOREIGN KEY (question_id) REFERENCES question (post_id) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT answer_question_post_id_fk FOREIGN KEY (question_id) REFERENCES question (post_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT answer_user_username_fk FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT answer_topic_lesson_fk FOREIGN KEY (lesson_id, topic_name) REFERENCES topic (lesson_id, name) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 
@@ -161,8 +177,8 @@ CREATE TABLE public.content
     id VARCHAR(8) PRIMARY KEY NOT NULL,
     title VARCHAR(20) NOT NULL,
     author VARCHAR(30),
-    stock INT DEFAULT 0 NOT NULL,
-    price VARCHAR(6) NOT NULL,
+    stock INT DEFAULT 0,
+    price VARCHAR(6),
     share_username VARCHAR(15) NOT NULL,
     CONSTRAINT content_user_username_fk FOREIGN KEY (share_username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -171,10 +187,13 @@ CREATE TABLE public.content
 CREATE TABLE public.book
 (
     content_id VARCHAR(8) PRIMARY KEY NOT NULL,
+    title VARCHAR(20) NOT NULL,
     isbn VARCHAR(16) NOT NULL,
     publisher VARCHAR(20),
     edition INT,
-    CONSTRAINT book_content_id_fk FOREIGN KEY (content_id) REFERENCES content (id) ON DELETE CASCADE ON UPDATE CASCADE
+    share_username VARCHAR(15) NOT NULL,
+    CONSTRAINT book_content_id_fk FOREIGN KEY (content_id) REFERENCES content (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT book_user_username_fk FOREIGN KEY (share_username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE UNIQUE INDEX book_isbn_uindex ON public.book (isbn);
 
@@ -183,8 +202,11 @@ CREATE UNIQUE INDEX book_isbn_uindex ON public.book (isbn);
 CREATE TABLE public.handout
 (
     content_id VARCHAR(8) PRIMARY KEY NOT NULL,
+    title VARCHAR(20) NOT NULL,
     "#of_pages" INT DEFAULT 0 NOT NULL,
-    CONSTRAINT handout_content_id_fk FOREIGN KEY (content_id) REFERENCES content (id) ON DELETE CASCADE ON UPDATE CASCADE
+    share_username VARCHAR(15) NOT NULL,
+    CONSTRAINT handout_content_id_fk FOREIGN KEY (content_id) REFERENCES content (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT handout_user_username_fk FOREIGN KEY (share_username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 
@@ -209,6 +231,7 @@ CREATE TABLE public.course
 CREATE TABLE public.start_course
 (
     request_id VARCHAR(6) PRIMARY KEY NOT NULL,
+    submission_time time NOT NULL,
     submit_non_admin_user VARCHAR(15) NOT NULL,
     submit_lesson_id VARCHAR(6) NOT NULL,
     CONSTRAINT start_course_request_id_fk FOREIGN KEY (request_id) REFERENCES request (id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -221,6 +244,7 @@ CREATE TABLE public.start_course
 CREATE TABLE public.upgrade
 (
     request_id VARCHAR(6) PRIMARY KEY NOT NULL,
+    submission_time time NOT NULL,
     submit_non_admin_user VARCHAR(15) NOT NULL,
     CONSTRAINT upgrade_request_id_fk FOREIGN KEY (request_id) REFERENCES request (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT upgrade_non_admin_username_fk FOREIGN KEY (submit_non_admin_user) REFERENCES non_admin (username) ON DELETE CASCADE ON UPDATE CASCADE
@@ -286,6 +310,7 @@ CREATE TRIGGER request_acception
     AFTER UPDATE OF result ON "check"
     EXECUTE PROCEDURE update_user_type_procedure();
 
+-------------user is-a-----------------
 
 CREATE OR REPLACE FUNCTION can_not_change_user()
     RETURNS TRIGGER AS
@@ -295,6 +320,7 @@ CREATE TRIGGER can_not_change_user
     BEFORE UPDATE ON "user"
     EXECUTE PROCEDURE can_not_change_user();
 
+-- DROP TRIGGER can_not_change_user ON public."user";
 
 CREATE OR REPLACE FUNCTION add_user()
     RETURNS TRIGGER AS
@@ -310,3 +336,56 @@ CREATE TRIGGER add_user_before_add_admin
     FOR EACH ROW
     EXECUTE PROCEDURE add_user();
 
+-----------post is-a-----------------
+CREATE OR REPLACE FUNCTION can_not_change_post()
+    RETURNS TRIGGER AS
+    '  BEGIN RAISE EXCEPTION ''can not change post''; END ' LANGUAGE plpgsql;
+
+CREATE TRIGGER can_not_change_post
+    BEFORE UPDATE ON post
+    EXECUTE PROCEDURE can_not_change_post();
+
+
+CREATE OR REPLACE FUNCTION add_post()
+    RETURNS TRIGGER AS
+    'BEGIN INSERT INTO post VALUES (new.id, new.context, new.publish_date, new.publish_time, new.last_edit, new.username, new.lesson_id, new.topic_name); RETURN new ;END ' LANGUAGE plpgsql;
+
+CREATE TRIGGER add_post_before_add_question
+    BEFORE INSERT ON question
+    FOR EACH ROW
+    EXECUTE PROCEDURE add_post();
+
+CREATE TRIGGER add_post_before_add_answer
+    BEFORE INSERT ON answer
+    FOR EACH ROW
+    EXECUTE PROCEDURE add_post();
+
+-----------content is-a-----------------
+CREATE OR REPLACE FUNCTION can_not_change_content()
+    RETURNS TRIGGER AS
+    '  BEGIN RAISE EXCEPTION ''can not change content''; RETURN new; END ' LANGUAGE plpgsql;
+
+CREATE TRIGGER can_not_change_content
+    BEFORE UPDATE ON content
+    EXECUTE PROCEDURE can_not_change_content();
+
+
+CREATE OR REPLACE FUNCTION add_content()
+    RETURNS TRIGGER AS
+    'BEGIN INSERT INTO content VALUES (new.content_id, new.title, NULL, NULL, NULL, new.share_username); RETURN new ;END ' LANGUAGE plpgsql;
+
+CREATE TRIGGER add_content_before_add_book
+    BEFORE INSERT ON book
+    FOR EACH ROW
+    EXECUTE PROCEDURE add_content();
+
+CREATE TRIGGER add_content_before_add_handout
+    BEFORE INSERT ON handout
+    FOR EACH ROW
+    EXECUTE PROCEDURE add_content();
+
+INSERT INTO non_admin VALUES ('aaa', 'abcd', 'ali', 're@f.v', 'normal', '14/10/75' , '3/1/1997');
+UPDATE "user" SET name = 'hoo' WHERE username = 'aaa';
+INSERT INTO book VALUES ('12345', 'salam', '1321654984', NULL, 1, 'aaa');
+INSERT INTO book VALUES ('12346', 'sal', '1324561984', 'kar', 3, 'aaa');
+UPDATE content SET title = 'hoo' WHERE id = '12345'
