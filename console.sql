@@ -124,11 +124,10 @@ CREATE TABLE public.post
     last_edit_time time,
     username VARCHAR(22) NOT NULL,
     lesson_id BIGINT NOT NULL,
-    topic_name VARCHAR(15) NOT NULL,
+    topic_name VARCHAR(15),
     CONSTRAINT post_user_username_fk FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT post_topic_lesson_fk FOREIGN KEY (lesson_id, topic_name) REFERENCES topic (lesson_id, name) ON DELETE CASCADE ON UPDATE CASCADE
 );
-
 
 
 CREATE TABLE public.sample_test
@@ -289,8 +288,8 @@ CREATE TABLE public."check"
 (
     admin_username VARCHAR(15) NOT NULL,
     request_id BIGINT  NOT NULL,
-    date date,
-    time time,
+    date date DEFAULT current_date,
+    time time DEFAULT current_time,
     result BOOLEAN,
     CONSTRAINT check_admin_username_request_id_pk PRIMARY KEY (admin_username, request_id),
     CONSTRAINT check_admin_username_fk FOREIGN KEY (admin_username) REFERENCES admin (username) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -303,13 +302,12 @@ CREATE TABLE public.enroll
 (
     coures_id BIGINT  NOT NULL,
     non_admin_username VARCHAR(15) NOT NULL,
-    date date,
-    time time,
+    date date DEFAULT current_date,
+    time time DEFAULT current_time,
     CONSTRAINT enroll_course_id_non_admin_username_pk PRIMARY KEY (coures_id, non_admin_username),
     CONSTRAINT enroll_course_id_fk FOREIGN KEY (coures_id) REFERENCES course (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT enroll_non_admin_username_fk FOREIGN KEY (non_admin_username) REFERENCES non_admin (username) ON DELETE CASCADE ON UPDATE CASCADE
 );
-
 
 
 CREATE TABLE public.reference
@@ -355,7 +353,7 @@ CREATE OR REPLACE FUNCTION process_request()
         IF new.request_id IN (SELECT request_id FROM upgrade ) AND new.result=TRUE
             THEN UPDATE non_admin SET type='instructor';
         ELSEIF new.request_id IN (SELECT request_id FROM start_course) AND new.result = TRUE
-            THEN INSERT INTO course (lesson_id, instructor_non_admin_username) VALUES(a1, b1);
+            THEN INSERT INTO course (id,lesson_id, instructor_non_admin_username) VALUES(new.request_id,a1, b1);
         END IF;
         RETURN NULL;
     END;
@@ -532,9 +530,7 @@ CREATE TRIGGER add_request_before_add_upgrade
 CREATE OR REPLACE FUNCTION attend_failure()
     RETURNS TRIGGER AS $not_attend_in_own$
         BEGIN
-            IF new.non_admin_username IN (SELECT username FROM non_admin, enroll AS S
-                WHERE new.non_admin_username = S.non_admin_username AND
-                type = 'instructor')
+            IF new.coures_id IN (SELECT id FROM course WHERE new.coures_id=course.id AND course.instructor_non_admin_username=new.non_admin_username)
                 THEN RAISE EXCEPTION 'you can''t attend in your own class';
             END IF;
             RETURN new;
@@ -574,6 +570,7 @@ CREATE OR REPLACE FUNCTION add_published_posts()
     RETURNS TRIGGER AS $published_posts_number$
         BEGIN
             UPDATE "user" SET published_posts = published_posts + 1 WHERE "user".username=new.username;
+            RETURN new;
         END;
         $published_posts_number$ LANGUAGE plpgsql;
 
@@ -587,6 +584,7 @@ CREATE OR REPLACE FUNCTION add_attendee()
     RETURNS TRIGGER AS $$
     BEGIN
         UPDATE course SET attendee=attendee+1 WHERE id=new.coures_id;
+        RETURN new;
     END;
     $$ LANGUAGE plpgsql;
 
@@ -612,9 +610,22 @@ CREATE TRIGGER check_test_date
     FOR EACH ROW
     EXECUTE PROCEDURE date_not_in_future();
 
+CREATE OR REPLACE FUNCTION add_topic()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        INSERT INTO topic VALUES (new.id, 'general', NULL ,NULL );
+        RETURN new;
+    END;
+    $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER add_general_topic
+    AFTER INSERT ON lesson
+    FOR EACH ROW
+    EXECUTE PROCEDURE add_topic();
 
 
--- CREATE VIEW instructor_view
---     AS SELECT * FROM course, enroll;
-
+CREATE VIEW instructor_view
+    AS SELECT username,name,"e-mail" FROM non_admin NATURAL JOIN enroll
+        WHERE non_admin.username=enroll.non_admin_username
+              AND coures_id IN (SELECT coures_id FROM course WHERE instructor_non_admin_username='hosein');
 

@@ -40,3 +40,22 @@ INSERT INTO sample_test(id, date, uni_held, "#_of_questions", lesson_id) VALUES 
 INSERT INTO sample_test(id, date, uni_held, "#_of_questions", lesson_id) VALUES (103061, '2013-9-14', 'beheshti', 6, 100004);
 INSERT INTO sample_test(id, date, uni_held, "#_of_questions", lesson_id) VALUES (103062, '2015-11-8', 'shiraz', 5, 100001);
 INSERT INTO sample_test(id, date, uni_held, "#_of_questions", lesson_id) VALUES (103063, '2014-05-11', 'tehran', 11, 100006);
+
+INSERT INTO "check"(admin_username, request_id, result) VALUES ('mohsen',300001,TRUE );
+
+--INSERT INTO enroll(coures_id, non_admin_username) VALUES (300001,'hosein');
+INSERT INTO enroll(coures_id, non_admin_username) VALUES (300001,'mahyar');
+
+
+INSERT INTO question(post_id, context, username, lesson_id, topic_name, title) VALUES (500001, 'Hello. What is this lesson about?','rasoul',100001,'general', 'lesson about');
+INSERT INTO answer(post_id, context, username, lesson_id, topic_name, question_id) VALUES (500002,'Its about Math', 'peyman', 100001,'general',500001);
+INSERT INTO question(post_id, context, username, lesson_id, topic_name, title) VALUES (500003,'This is just a general post', 'alireza', 100003,'general','general post');
+
+INSERT INTO "like"(user_username, post_id) VALUES ('keyvan',500002);
+INSERT INTO "like"(user_username, post_id) VALUES ('keyvan',500001);
+
+INSERT INTO "bookmark"(user_username, post_id) VALUES ('keyvan',500001);
+INSERT INTO "bookmark"(user_username, post_id) VALUES ('keyvan',500002);
+
+
+
