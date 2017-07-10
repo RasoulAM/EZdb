@@ -30,11 +30,6 @@ SELECT * FROM instructor_view;
 INSERT INTO instructor_view VALUES ('41215', 'riazi', DEFAULT , 50, 40, DEFAULT , DEFAULT , '40110', mahyar, '40110', DEFAULT , DEFAULT , DEFAULT )
 
 
-INSERT INTO book(title, isbn, publisher, edition, share_username) VALUES ('jabr1', '132546', 'fatemi', 1, 'hosein');
-INSERT INTO book(title, isbn, publisher, edition, share_username) VALUES ('sakhtar', '134526', 'cambridge', 3, 'rasoul');
-INSERT INTO book(title, isbn, publisher, edition, share_username) VALUES ('database', '136524', 'rouhani', 2, 'mahyar')
 
-INSERT INTO handout(title, "#of_pages", share_username) VALUES ('database', 116, 'hamed');
-INSERT INTO handout(title, "#of_pages", share_username) VALUES ('adabiat', 43, 'keyvan');
-INSERT INTO handout(title, "#of_pages", share_username) VALUES ('shimi', 1039, 'peyman');
+
 

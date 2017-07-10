@@ -24,3 +24,17 @@ INSERT INTO lesson(name) VALUES ('chemistry');
 
 
 INSERT INTO start_course(submit_non_admin_user,submit_lesson_id) VALUES ('hosein', '124940686');
+
+
+INSERT INTO book(title, isbn, publisher, edition, share_username) VALUES ('jabr1', '132546', 'fatemi', 1, 'hosein');
+INSERT INTO book(title, isbn, publisher, edition, share_username) VALUES ('sakhtar', '134526', 'cambridge', 3, 'rasoul');
+INSERT INTO book(title, isbn, publisher, edition, share_username) VALUES ('database', '136524', 'rouhani', 2, 'mahyar')
+
+INSERT INTO handout(title, "#of_pages", share_username) VALUES ('database', 116, 'hamed');
+INSERT INTO handout(title, "#of_pages", share_username) VALUES ('adabiat', 43, 'keyvan');
+INSERT INTO handout(title, "#of_pages", share_username) VALUES ('shimi', 1039, 'peyman');
+
+INSERT INTO sample_test(uni_held, "#_of_questions", lesson_id) VALUES ('sharif', 13, 1241588087);
+INSERT INTO sample_test(uni_held, "#_of_questions", lesson_id) VALUES ('beheshti', 6, 124940686);
+INSERT INTO sample_test(uni_held, "#_of_questions", lesson_id) VALUES ('shiraz', 5, 1241588087);
+INSERT INTO sample_test(uni_held, "#_of_questions", lesson_id) VALUES ('tehran', 11, 2014125264);
