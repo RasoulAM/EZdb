@@ -23,6 +23,9 @@ INSERT INTO lesson(name) VALUES ('science');
 INSERT INTO lesson(name) VALUES ('chemistry');
 
 
+INSERT INTO upgrade(submit_non_admin_user) VALUES ('kambiz');
+INSERT INTO upgrade(submit_non_admin_user) VALUES ('mahyar');
+
 INSERT INTO start_course(submit_non_admin_user,submit_lesson_id) VALUES ('hosein', '124940686');
 
 
