@@ -596,6 +596,24 @@ CREATE TRIGGER increment_attendees
     EXECUTE PROCEDURE add_attendee();
 
 
+CREATE OR REPLACE FUNCTION date_not_in_future()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        IF new.date > current_date THEN
+            RAISE EXCEPTION 'Invalid Test Date';
+        ELSE
+            RETURN new;
+        END IF;
+    END;
+    $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER check_test_date
+    BEFORE INSERT ON sample_test
+    FOR EACH ROW
+    EXECUTE PROCEDURE date_not_in_future();
+
+
+
 -- CREATE VIEW instructor_view
 --     AS SELECT * FROM course, enroll;
 

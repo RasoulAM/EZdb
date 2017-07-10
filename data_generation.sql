@@ -26,7 +26,7 @@ INSERT INTO lesson(id, name) VALUES (100006,'chemistry');
 INSERT INTO upgrade(request_id,submit_non_admin_user) VALUES (200001,'kambiz');
 INSERT INTO upgrade(request_id,submit_non_admin_user) VALUES (200002,'mahyar');
 
-INSERT INTO start_course(request_id, submit_non_admin_user,submit_lesson_id) VALUES (300001,'hosein', '124940686');
+INSERT INTO start_course(request_id, submit_non_admin_user,submit_lesson_id) VALUES (300001,'hosein', '100002');
 
 INSERT INTO book(title, isbn, publisher, edition, share_username) VALUES ('jabr1', '132546', 'fatemi', 1, 'hosein');
 INSERT INTO book(title, isbn, publisher, edition, share_username) VALUES ('sakhtar', '134526', 'cambridge', 3, 'rasoul');
@@ -36,7 +36,7 @@ INSERT INTO handout(title, "#of_pages", share_username) VALUES ('database', 116,
 INSERT INTO handout(title, "#of_pages", share_username) VALUES ('adabiat', 43, 'keyvan');
 INSERT INTO handout(title, "#of_pages", share_username) VALUES ('shimi', 1039, 'peyman');
 
-INSERT INTO sample_test(uni_held, "#_of_questions", lesson_id) VALUES ('sharif', 13, 1241588087);
-INSERT INTO sample_test(uni_held, "#_of_questions", lesson_id) VALUES ('beheshti', 6, 124940686);
-INSERT INTO sample_test(uni_held, "#_of_questions", lesson_id) VALUES ('shiraz', 5, 1241588087);
-INSERT INTO sample_test(uni_held, "#_of_questions", lesson_id) VALUES ('tehran', 11, 2014125264);
+INSERT INTO sample_test(uni_held, "#_of_questions", lesson_id) VALUES ('sharif', 13, 100002);
+INSERT INTO sample_test(uni_held, "#_of_questions", lesson_id) VALUES ('beheshti', 6, 100005);
+INSERT INTO sample_test(uni_held, "#_of_questions", lesson_id) VALUES ('shiraz', 5, 100001);
+INSERT INTO sample_test(uni_held, "#_of_questions", lesson_id) VALUES ('tehran', 11, 100002);
