@@ -13,12 +13,12 @@ CREATE DOMAIN "time" VARCHAR(5) CHECK (VALUE ~ '^[0-2][0-3]:[0-5][0-9]$');
 CREATE TABLE public."user"
 (
     username VARCHAR(15) PRIMARY KEY NOT NULL,
-    password VARCHAR(22) NOT NULL,
+    password VARCHAR(22) NOT NULL CHECK (char_length(password) >= 8),
     name VARCHAR(15) NOT NULL,
     age age,
     country VARCHAR(20),
     "e-mail" "e-mail" NOT NULL ,
-    published_posts INTEGER DEFAULT 0 NOT NULL,
+    published_posts INTEGER DEFAULT 0 ,
     profile_pics url
 );
 CREATE UNIQUE INDEX "user_e-mail_uindex" ON public."user" ("e-mail");
@@ -51,18 +51,18 @@ CREATE TABLE public.non_admin
 CREATE UNIQUE INDEX "non_admin_e-mail_uindex" ON public.admin ("e-mail");
 
 
-
 CREATE TABLE public.lesson
 (
-    id VARCHAR(6) PRIMARY KEY NOT NULL,
+    id BIGINT DEFAULT make_random_id() PRIMARY KEY NOT NULL,
     name VARCHAR(15) NOT NULL
 );
+CREATE UNIQUE INDEX lesson_name_uindex ON public.lesson (name);
 
 
 
 CREATE TABLE public.request
 (
-    id VARCHAR(6) PRIMARY KEY NOT NULL,
+    id BIGINT DEFAULT make_random_id() PRIMARY KEY NOT NULL,
     submission_time time NOT NULL
 );
 
@@ -70,7 +70,7 @@ CREATE TABLE public.request
 
 CREATE TABLE public.topic
 (
-    lesson_id VARCHAR(6) NOT NULL,
+    lesson_id BIGINT NOT NULL,
     name VARCHAR(22) NOT NULL,
     subtopic1 VARCHAR(20),
     subtopic2 VARCHAR(20),
@@ -511,7 +511,7 @@ CREATE OR REPLACE FUNCTION upgrade_to_instructor()
                 WHERE type = 'instructor')
                 THEN RAISE EXCEPTION 'you are not a normal non-admin user!';
             END IF;
-
+            RETURN new;
         END;
         $non_admin_instructor$ LANGUAGE plpgsql;
 
@@ -563,3 +563,27 @@ insert into f values (default);
 insert into f values (default);
 
 select * from f;
+
+
+
+
+
+----------- derived attributes -----------
+
+CREATE OR REPLACE FUNCTION add_published_posts()
+    RETURNS TRIGGER AS $published_posts_number$
+        BEGIN
+            UPDATE "user" SET published_posts = published_posts + 1;
+        END;
+        $published_posts_number$ LANGUAGE plpgsql;
+
+CREATE TRIGGER published_posts_number
+    after INSERT ON post
+    for EACH ROW
+    EXECUTE PROCEDURE add_published_posts();
+
+
+CREATE VIEW instructor_view
+    AS SELECT * FROM course, enroll;
+
+
