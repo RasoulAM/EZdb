@@ -70,8 +70,6 @@ CREATE TABLE public.admin
 );
 CREATE UNIQUE INDEX "admin_e-mail_uindex" ON public.admin ("e-mail");
 
-
-
 CREATE TABLE public.non_admin
 (
     username VARCHAR(15) PRIMARY KEY NOT NULL,
@@ -79,8 +77,8 @@ CREATE TABLE public.non_admin
     name VARCHAR(15) NOT NULL,
     "e-mail" "e-mail" NOT NULL,
     type user_type,
-    membership_started date NOT NULL,
-    membership_expiry date NOT NULL,
+    membership_started date DEFAULT current_date NOT NULL,
+    membership_expiry date DEFAULT current_date + 365 NOT NULL,
     CONSTRAINT non_admin_user_username_fk FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE UNIQUE INDEX "non_admin_e-mail_uindex" ON public.admin ("e-mail");
@@ -97,8 +95,8 @@ CREATE UNIQUE INDEX lesson_name_uindex ON public.lesson (name);
 CREATE TABLE public.request
 (
     id id_number PRIMARY KEY NOT NULL,
-    submission_time time NOT NULL,
-    submission_date date NOT NULL
+    submission_time time DEFAULT current_time NOT NULL,
+    submission_date date  DEFAULT current_date NOT NULL
 );
 
 
@@ -120,8 +118,8 @@ CREATE TABLE public.post
 (
     id id_number PRIMARY KEY NOT NULL,
     context VARCHAR(512) NOT NULL,
-    publish_date date NOT NULL,
-    publish_time time NOT NULL,
+    publish_date date DEFAULT current_date NOT NULL,
+    publish_time time DEFAULT current_time NOT NULL,
     last_edit_date date,
     last_edit_time time,
     username VARCHAR(22) NOT NULL,
@@ -135,7 +133,7 @@ CREATE TABLE public.post
 
 CREATE TABLE public.sample_test
 (
-    id VARCHAR(6) PRIMARY KEY NOT NULL,
+    id id_number PRIMARY KEY NOT NULL,
     date date,
     uni_held VARCHAR(40),
     "#_of_questions" INTEGER,
@@ -147,15 +145,15 @@ CREATE TABLE public.sample_test
 
 CREATE TABLE public.question
 (
-    post_id VARCHAR(6) PRIMARY KEY NOT NULL,
+    post_id BIGINT PRIMARY KEY NOT NULL,
     context VARCHAR(512) NOT NULL,
-    publish_date date NOT NULL,
-    publish_time time NOT NULL,
+    publish_date date  DEFAULT current_date NOT NULL,
+    publish_time time DEFAULT current_time NOT NULL,
     username VARCHAR(22) NOT NULL,
     lesson_id BIGINT NOT NULL,
     topic_name VARCHAR(15) NOT NULL,
     title VARCHAR(50) NOT NULL,
-    sample_test_id VARCHAR(6),
+    sample_test_id BIGINT,
     CONSTRAINT question_sample_test_id_fk FOREIGN KEY (sample_test_id) REFERENCES sample_test (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT question_user_username_fk FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT question_topic_lesson_fk FOREIGN KEY (lesson_id, topic_name) REFERENCES topic (lesson_id, name) ON DELETE CASCADE ON UPDATE CASCADE
@@ -165,14 +163,14 @@ CREATE TABLE public.question
 
 CREATE TABLE public.answer
 (
-    post_id VARCHAR(6) PRIMARY KEY NOT NULL,
+    post_id id_number PRIMARY KEY NOT NULL,
     context VARCHAR(512) NOT NULL,
-    publish_date date NOT NULL,
-    publish_time time NOT NULL,
+    publish_date date DEFAULT current_date NOT NULL,
+    publish_time time DEFAULT current_time NOT NULL,
     username VARCHAR(22) NOT NULL,
     lesson_id BIGINT NOT NULL,
     topic_name VARCHAR(15) NOT NULL,
-    question_id VARCHAR(6) NOT NULL,
+    question_id BIGINT NOT NULL,
     CONSTRAINT answer_question_post_id_fk FOREIGN KEY (question_id) REFERENCES question (post_id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT answer_user_username_fk FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT answer_topic_lesson_fk FOREIGN KEY (lesson_id, topic_name) REFERENCES topic (lesson_id, name) ON DELETE CASCADE ON UPDATE CASCADE
@@ -184,8 +182,8 @@ CREATE TABLE public."like"
 (
     user_username VARCHAR(15) NOT NULL,
     post_id BIGINT NOT NULL,
-    date date NOT NULL ,
-    time time NOT NULL,
+    date date DEFAULT current_date NOT NULL ,
+    time time DEFAULT current_time NOT NULL,
     CONSTRAINT like_pkey PRIMARY KEY (user_username, post_id),
     CONSTRAINT like_user_username_fk FOREIGN KEY (user_username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT like_post_id_fk FOREIGN KEY (post_id) REFERENCES post (id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -198,8 +196,8 @@ CREATE TABLE public.bookmark
 (
     user_username VARCHAR(15) NOT NULL,
     post_id BIGINT NOT NULL,
-    date date NOT NULL,
-    time time NOT NULL,
+    date date DEFAULT current_date NOT NULL,
+    time time DEFAULT current_time NOT NULL,
     CONSTRAINT bookmark_user_username_post_id_pk PRIMARY KEY (user_username, post_id),
     CONSTRAINT bookmark_user_username_fk FOREIGN KEY (user_username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT bookmark_post_id_fk FOREIGN KEY (post_id) REFERENCES post (id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -220,7 +218,7 @@ CREATE TABLE public.content
 
 CREATE TABLE public.book
 (
-    content_id BIGINT PRIMARY KEY NOT NULL,
+    content_id id_number PRIMARY KEY NOT NULL,
     title VARCHAR(20) NOT NULL,
     isbn VARCHAR(16) NOT NULL,
     publisher VARCHAR(20),
@@ -235,7 +233,7 @@ CREATE UNIQUE INDEX book_isbn_uindex ON public.book (isbn);
 
 CREATE TABLE public.handout
 (
-    content_id BIGINT PRIMARY KEY NOT NULL,
+    content_id id_number PRIMARY KEY NOT NULL,
     title VARCHAR(20) NOT NULL,
     "#of_pages" INT DEFAULT 0 NOT NULL,
     share_username VARCHAR(15) NOT NULL,
@@ -265,8 +263,8 @@ CREATE TABLE public.course
 CREATE TABLE public.start_course
 (
     request_id id_number PRIMARY KEY NOT NULL,
-    submission_time time NOT NULL,
-    submission_date date NOT NULL,
+    submission_time time DEFAULT current_time NOT NULL,
+    submission_date date DEFAULT current_date NOT NULL,
     submit_non_admin_user VARCHAR(15) NOT NULL,
     submit_lesson_id BIGINT NOT NULL,
     CONSTRAINT start_course_request_id_fk FOREIGN KEY (request_id) REFERENCES request (id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -278,8 +276,8 @@ CREATE TABLE public.start_course
 CREATE TABLE public.upgrade
 (
     request_id id_number PRIMARY KEY NOT NULL,
-    submission_time time NOT NULL,
-    submission_date date NOT NULL,
+    submission_time time DEFAULT current_time NOT NULL,
+    submission_date date DEFAULT current_date NOT NULL,
     submit_non_admin_user VARCHAR(15) NOT NULL,
     CONSTRAINT upgrade_request_id_fk FOREIGN KEY (request_id) REFERENCES request (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT upgrade_non_admin_username_fk FOREIGN KEY (submit_non_admin_user) REFERENCES non_admin (username) ON DELETE CASCADE ON UPDATE CASCADE
@@ -368,8 +366,9 @@ CREATE TRIGGER request_acception
     FOR EACH ROW
     EXECUTE PROCEDURE process_request();
 
--------------user is-a-----------------
 
+
+-------------user is-a-----------------
 CREATE OR REPLACE FUNCTION can_not_change_user()
     RETURNS TRIGGER AS $can_not_change_user$
     BEGIN
@@ -378,10 +377,9 @@ CREATE OR REPLACE FUNCTION can_not_change_user()
     $can_not_change_user$ LANGUAGE plpgsql;
 
 CREATE TRIGGER can_not_change_user
-    BEFORE UPDATE ON "user"
+    BEFORE UPDATE OF username, "e-mail" ON "user"
     EXECUTE PROCEDURE can_not_change_user();
 
--- DROP TRIGGER can_not_change_user ON public."user";
 
 CREATE OR REPLACE FUNCTION add_user()
     RETURNS TRIGGER AS $name$
@@ -402,10 +400,11 @@ CREATE TRIGGER add_user_before_add_admin
     FOR EACH ROW
     EXECUTE PROCEDURE add_user();
 
+
 CREATE OR REPLACE FUNCTION check_capacity()
     RETURNS TRIGGER AS $enroll_if_has_capacity$
         BEGIN
-            IF (SELECT attendee FROM enroll  NATURAL JOIN course WHERE coures_id=new.coures_id) >= (SELECT capacity FROM enroll  NATURAL JOIN course WHERE coures_id=new.coures_id) THEN
+            IF (SELECT count(*) FROM enroll  NATURAL JOIN course WHERE coures_id=new.coures_id) >= (SELECT DISTINCT capacity FROM course WHERE course.id=new.coures_id) THEN
                 RAISE EXCEPTION 'course does not have capacity';
             ELSE
                 RETURN new;
@@ -428,14 +427,27 @@ CREATE OR REPLACE FUNCTION can_not_change_post()
     $can_not_change_post$ LANGUAGE plpgsql;
 
 CREATE TRIGGER can_not_change_post
-    BEFORE UPDATE ON post
+    BEFORE UPDATE OF id, publish_date, publish_time, username, lesson_id ON post
+    FOR EACH ROW
     EXECUTE PROCEDURE can_not_change_post();
+
+CREATE OR REPLACE FUNCTION change_post_edit_time()
+    RETURNS TRIGGER AS $change_post_edit_time$
+    BEGIN
+        UPDATE post SET last_edit_date=current_date,last_edit_time=current_time WHERE post.id=new.id;
+    END;
+    $change_post_edit_time$ LANGUAGE plpgsql;
+
+CREATE TRIGGER edit_post
+    AFTER UPDATE OF context ON post
+    FOR EACH ROW
+    EXECUTE PROCEDURE change_post_edit_time();
 
 
 CREATE OR REPLACE FUNCTION add_post()
     RETURNS TRIGGER AS $add_post_before_add_question$
     BEGIN
-        INSERT INTO post VALUES (new.post_id, new.context, new.publish_date, new.publish_time, new.last_edit, new.username, new.lesson_id, new.topic_name);
+        INSERT INTO post VALUES (new.post_id, new.context, DEFAULT , DEFAULT ,NULL ,NULL , new.username, new.lesson_id, new.topic_name);
         RETURN new;
     END;
     $add_post_before_add_question$ LANGUAGE plpgsql;
@@ -561,17 +573,30 @@ CREATE TRIGGER non_admin_instructor
 CREATE OR REPLACE FUNCTION add_published_posts()
     RETURNS TRIGGER AS $published_posts_number$
         BEGIN
-            UPDATE "user" SET published_posts = published_posts + 1;
+            UPDATE "user" SET published_posts = published_posts + 1 WHERE "user".username=new.username;
         END;
         $published_posts_number$ LANGUAGE plpgsql;
 
-CREATE TRIGGER published_posts_number
-    after INSERT ON post
-    for EACH ROW
+CREATE TRIGGER increment_published_posts
+    AFTER INSERT ON post
+    FOR EACH ROW
     EXECUTE PROCEDURE add_published_posts();
 
 
-CREATE VIEW instructor_view
-    AS SELECT * FROM course, enroll;
+CREATE OR REPLACE FUNCTION add_attendee()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        UPDATE course SET attendee=attendee+1 WHERE id=new.coures_id;
+    END;
+    $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER increment_attendees
+    AFTER INSERT ON enroll
+    FOR EACH ROW
+    EXECUTE PROCEDURE add_attendee();
+
+
+-- CREATE VIEW instructor_view
+--     AS SELECT * FROM course, enroll;
 
 

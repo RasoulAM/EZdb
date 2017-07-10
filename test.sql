@@ -1,25 +1,4 @@
-INSERT INTO non_admin VALUES ('hosein', 'qwertyui', 'hosein', 'hos7@gmail.com', 'instructor', '1/1/97', '3/10/98');
-INSERT INTO non_admin VALUES ('reza', 'zaxscdvf', 'reza', 'reza@gmail.com', 'instructor', '1/10/97', '3/9/98');
-INSERT INTO non_admin VALUES ('kambiz', 'asdfghjk', 'kambiz', 'kam@gmail.com', 'normal', '10/7/97', '3/11/98');
-INSERT INTO non_admin VALUES ('mahyar', 'mknjbhvg', 'mahyar', 'mah@gmail.com', 'normal', '1/12/98', '13/1/99');
-INSERT INTO non_admin VALUES ('hamed', 'qwerfatyui', 'hosein', 'hame@gmail.com', 'instructor', '1/1/97', '30/10/98');
-INSERT INTO non_admin VALUES ('rasoul', 'zahgshxscdvf', 'reza', 'raso@gmail.com', 'instructor', '1/10/97', '3/9/98');
-INSERT INTO non_admin VALUES ('peyman', 'asdfgjjdhjk', 'kambiz', 'pey@gmail.com', 'normal', '10/7/97', '3/11/98');
-INSERT INTO non_admin VALUES ('keyvan', 'mknjb43trhvg', 'mahyar', 'key@gmail.com', 'normal', '1/12/98', '13/1/99');
-
-
-INSERT INTO admin VALUES ('hamid', 'zxasweqd', 'hamid', 'ham@gmail.com');
-INSERT INTO admin VALUES ('mohammad', '14562387', 'mohammad', 'moh@gmail.com');
-INSERT INTO admin VALUES ('alireza', 'mvjfuctx', 'alireza', 'ali@gmail.com');
-INSERT INTO admin VALUES ('mohsen', 'xvayilkh', 'mohsen', 'mohs@gmail.com');
-INSERT INTO admin VALUES ('milad7ink', 'opglkwjilkh', 'milad', 'ink@gmail.com');
-
-
-INSERT INTO lesson VALUES (DEFAULT , 'math');
-INSERT INTO lesson VALUES (DEFAULT , 'jabr');
-
-INSERT INTO start_course VALUES (DEFAULT , '14:32','1/10/97', 'hosein', '124940686');
-INSERT INTO start_course VALUES ('154326', '14:31','1/10/97','mahyar', '20216');
+INSERT INTO start_course(submit_non_admin_user,submit_lesson_id) VALUES ('hosein', '124940686');
 INSERT INTO upgrade VALUES (DEFAULT , '2:33','1/10/97', 'hosein');
 INSERT INTO upgrade VALUES (DEFAULT , '00:16','1/10/97', 'kambiz');
 
@@ -43,6 +22,9 @@ SELECT submit_non_admin_user FROM start_course;
 INSERT INTO post VALUES ('12345', 'salam khoobi', '14/5/96', '15:42', '14/5/96', )
 
 INSERT INTO course VALUES ('1234', DEFAULT , DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT, '40110', 'hosein');
+
+INSERT INTO enroll VALUES (638874329,'keyvan', '01/01/01', '01:01');
+INSERT INTO enroll VALUES (638874329,'peyman', '01/01/01', '01:01');
 
 SELECT * FROM instructor_view;
 INSERT INTO instructor_view VALUES ('41215', 'riazi', DEFAULT , 50, 40, DEFAULT , DEFAULT , '40110', mahyar, '40110', DEFAULT , DEFAULT , DEFAULT )
