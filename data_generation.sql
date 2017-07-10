@@ -15,19 +15,18 @@ INSERT INTO admin VALUES ('mohsen', 'xvayilkh', 'mohsen', 'mohs@gmail.com');
 INSERT INTO admin VALUES ('milad7ink', 'opglkwjilkh', 'milad', 'ink@gmail.com');
 
 
-INSERT INTO lesson(name) VALUES ('math');
-INSERT INTO lesson(name) VALUES ('jabr');
-INSERT INTO lesson(name) VALUES ('poetry');
-INSERT INTO lesson(name) VALUES ('history');
-INSERT INTO lesson(name) VALUES ('science');
-INSERT INTO lesson(name) VALUES ('chemistry');
+INSERT INTO lesson(id, name) VALUES (100001,'math');
+INSERT INTO lesson(id, name) VALUES (100002,'jabr');
+INSERT INTO lesson(id, name) VALUES (100003,'poetry');
+INSERT INTO lesson(id, name) VALUES (100004,'history');
+INSERT INTO lesson(id, name) VALUES (100005,'science');
+INSERT INTO lesson(id, name) VALUES (100006,'chemistry');
 
 
-INSERT INTO upgrade(submit_non_admin_user) VALUES ('kambiz');
-INSERT INTO upgrade(submit_non_admin_user) VALUES ('mahyar');
+INSERT INTO upgrade(request_id,submit_non_admin_user) VALUES (200001,'kambiz');
+INSERT INTO upgrade(request_id,submit_non_admin_user) VALUES (200002,'mahyar');
 
-INSERT INTO start_course(submit_non_admin_user,submit_lesson_id) VALUES ('hosein', '124940686');
-
+INSERT INTO start_course(request_id, submit_non_admin_user,submit_lesson_id) VALUES (300001,'hosein', '124940686');
 
 INSERT INTO book(content_id, title, isbn, publisher, edition, share_username) VALUES (400001, 'jabr1', '132546', 'fatemi', 1, 'hosein');
 INSERT INTO book(content_id, title, isbn, publisher, edition, share_username) VALUES (400002, 'sakhtar', '134526', 'cambridge', 3, 'rasoul');

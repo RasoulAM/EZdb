@@ -86,7 +86,7 @@ CREATE UNIQUE INDEX "non_admin_e-mail_uindex" ON public.admin ("e-mail");
 
 CREATE TABLE public.lesson
 (
-    id id_number PRIMARY KEY NOT NULL,
+    id BIGINT PRIMARY KEY NOT NULL,
     name VARCHAR(15) NOT NULL
 );
 CREATE UNIQUE INDEX lesson_name_uindex ON public.lesson (name);
@@ -94,7 +94,7 @@ CREATE UNIQUE INDEX lesson_name_uindex ON public.lesson (name);
 
 CREATE TABLE public.request
 (
-    id id_number PRIMARY KEY NOT NULL,
+    id BIGINT PRIMARY KEY NOT NULL,
     submission_time time DEFAULT current_time NOT NULL,
     submission_date date  DEFAULT current_date NOT NULL
 );
@@ -103,7 +103,7 @@ CREATE TABLE public.request
 
 CREATE TABLE public.topic
 (
-    lesson_id id_number NOT NULL,
+    lesson_id BIGINT NOT NULL,
     name VARCHAR(22) NOT NULL,
     subtopic1 VARCHAR(20),
     subtopic2 VARCHAR(20),
@@ -116,7 +116,7 @@ CREATE UNIQUE INDEX topic_lesson_id_name_uindex ON public.topic (lesson_id, name
 
 CREATE TABLE public.post
 (
-    id id_number PRIMARY KEY NOT NULL,
+    id BIGINT PRIMARY KEY NOT NULL,
     context VARCHAR(512) NOT NULL,
     publish_date date DEFAULT current_date NOT NULL,
     publish_time time DEFAULT current_time NOT NULL,
@@ -133,7 +133,7 @@ CREATE TABLE public.post
 
 CREATE TABLE public.sample_test
 (
-    id id_number PRIMARY KEY NOT NULL,
+    id BIGINT PRIMARY KEY NOT NULL,
     date date,
     uni_held VARCHAR(40),
     "#_of_questions" INTEGER,
@@ -163,7 +163,7 @@ CREATE TABLE public.question
 
 CREATE TABLE public.answer
 (
-    post_id id_number PRIMARY KEY NOT NULL,
+    post_id BIGINT PRIMARY KEY NOT NULL,
     context VARCHAR(512) NOT NULL,
     publish_date date DEFAULT current_date NOT NULL,
     publish_time time DEFAULT current_time NOT NULL,
@@ -206,7 +206,7 @@ CREATE TABLE public.bookmark
 
 CREATE TABLE public.content
 (
-    id id_number PRIMARY KEY NOT NULL,
+    id BIGINT PRIMARY KEY NOT NULL,
     title VARCHAR(20) NOT NULL,
     author VARCHAR(30),
     stock INT DEFAULT 0,
@@ -218,7 +218,7 @@ CREATE TABLE public.content
 
 CREATE TABLE public.book
 (
-    content_id id_number PRIMARY KEY NOT NULL,
+    content_id BIGINT PRIMARY KEY NOT NULL,
     title VARCHAR(20) NOT NULL,
     isbn VARCHAR(16) NOT NULL,
     publisher VARCHAR(20),
@@ -233,7 +233,7 @@ CREATE UNIQUE INDEX book_isbn_uindex ON public.book (isbn);
 
 CREATE TABLE public.handout
 (
-    content_id id_number PRIMARY KEY NOT NULL,
+    content_id BIGINT PRIMARY KEY NOT NULL,
     title VARCHAR(20) NOT NULL,
     "#of_pages" INT DEFAULT 0 NOT NULL,
     share_username VARCHAR(15) NOT NULL,
@@ -244,7 +244,7 @@ CREATE TABLE public.handout
 
 CREATE TABLE public.course
 (
-    id id_number PRIMARY KEY NOT NULL,
+    id BIGINT PRIMARY KEY NOT NULL,
     title VARCHAR(12),
     schedule VARCHAR(16),
     capacity INT DEFAULT 0,
@@ -262,7 +262,7 @@ CREATE TABLE public.course
 
 CREATE TABLE public.start_course
 (
-    request_id id_number PRIMARY KEY NOT NULL,
+    request_id BIGINT PRIMARY KEY NOT NULL,
     submission_time time DEFAULT current_time NOT NULL,
     submission_date date DEFAULT current_date NOT NULL,
     submit_non_admin_user VARCHAR(15) NOT NULL,
@@ -275,7 +275,7 @@ CREATE TABLE public.start_course
 
 CREATE TABLE public.upgrade
 (
-    request_id id_number PRIMARY KEY NOT NULL,
+    request_id BIGINT PRIMARY KEY NOT NULL,
     submission_time time DEFAULT current_time NOT NULL,
     submission_date date DEFAULT current_date NOT NULL,
     submit_non_admin_user VARCHAR(15) NOT NULL,
@@ -288,7 +288,7 @@ CREATE TABLE public.upgrade
 CREATE TABLE public."check"
 (
     admin_username VARCHAR(15) NOT NULL,
-    request_id id_number  NOT NULL,
+    request_id BIGINT  NOT NULL,
     date date,
     time time,
     result BOOLEAN,
@@ -301,7 +301,7 @@ CREATE TABLE public."check"
 
 CREATE TABLE public.enroll
 (
-    coures_id id_number  NOT NULL,
+    coures_id BIGINT  NOT NULL,
     non_admin_username VARCHAR(15) NOT NULL,
     date date,
     time time,
@@ -314,8 +314,8 @@ CREATE TABLE public.enroll
 
 CREATE TABLE public.reference
 (
-    content_id id_number  NOT NULL,
-    course_id id_number  NOT NULL,
+    content_id BIGINT  NOT NULL,
+    course_id BIGINT  NOT NULL,
     CONSTRAINT reference_content_id_course_id_pk PRIMARY KEY (content_id, course_id),
     CONSTRAINT reference_content_id_fk FOREIGN KEY (content_id) REFERENCES content (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT reference_course_id_fk FOREIGN KEY (course_id) REFERENCES course (id) ON DELETE CASCADE ON UPDATE CASCADE
