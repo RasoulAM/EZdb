@@ -10,6 +10,41 @@ CREATE DOMAIN user_type VARCHAR(10) CHECK (VALUE IN ('normal', 'instructor'));
 
 CREATE DOMAIN "time" VARCHAR(5) CHECK (VALUE ~ '^[0-2][0-3]:[0-5][0-9]$');
 
+CREATE OR REPLACE FUNCTION pseudo_encrypt(VALUE int) returns BIGINT AS $$
+    DECLARE
+        l1 int;
+        l2 int;
+        r1 int;
+        r2 int;
+        i int:=0;
+    BEGIN
+        l1:= (VALUE >> 16) & 65535;
+        r1:= VALUE & 65535;
+        WHILE i < 3 LOOP
+            l2 := r1;
+            r2 := l1 # ((((1366.0 * r1 + 150889) % 714025) / 714025.0) * 32767)::int;
+            l1 := l2;
+            r1 := r2;
+            i := i + 1;
+        END LOOP;
+    RETURN ((l1::BIGINT << 16) + r1);
+END;
+$$ LANGUAGE plpgsql STRICT IMMUTABLE ;
+
+-- Create a sequence for generating the input to the pseudo_encrypt function
+CREATE SEQUENCE random_int_seq;
+
+-- A function that increments the sequence above and generates a random integer
+CREATE FUNCTION make_random_id() RETURNS BIGINT AS $$
+    SELECT pseudo_encrypt(nextval('random_int_seq')::INT)
+$$ LANGUAGE SQL;
+
+CREATE DOMAIN id_number BIGINT DEFAULT make_random_id();
+
+--------------------------        -------------------------------
+                        -- Tables --
+--------------------------        -------------------------------
+
 CREATE TABLE public."user"
 (
     username VARCHAR(15) PRIMARY KEY NOT NULL,
@@ -53,24 +88,24 @@ CREATE UNIQUE INDEX "non_admin_e-mail_uindex" ON public.admin ("e-mail");
 
 CREATE TABLE public.lesson
 (
-    id BIGINT DEFAULT make_random_id() PRIMARY KEY NOT NULL,
+    id id_number PRIMARY KEY NOT NULL,
     name VARCHAR(15) NOT NULL
 );
 CREATE UNIQUE INDEX lesson_name_uindex ON public.lesson (name);
 
 
-
 CREATE TABLE public.request
 (
-    id BIGINT DEFAULT make_random_id() PRIMARY KEY NOT NULL,
-    submission_time time NOT NULL
+    id id_number PRIMARY KEY NOT NULL,
+    submission_time time NOT NULL,
+    submission_date date NOT NULL
 );
 
 
 
 CREATE TABLE public.topic
 (
-    lesson_id BIGINT NOT NULL,
+    lesson_id id_number NOT NULL,
     name VARCHAR(22) NOT NULL,
     subtopic1 VARCHAR(20),
     subtopic2 VARCHAR(20),
@@ -83,13 +118,14 @@ CREATE UNIQUE INDEX topic_lesson_id_name_uindex ON public.topic (lesson_id, name
 
 CREATE TABLE public.post
 (
-    id VARCHAR(6) PRIMARY KEY NOT NULL,
+    id id_number PRIMARY KEY NOT NULL,
     context VARCHAR(512) NOT NULL,
     publish_date date NOT NULL,
     publish_time time NOT NULL,
-    last_edit date NOT NULL,
+    last_edit_date date,
+    last_edit_time time,
     username VARCHAR(22) NOT NULL,
-    lesson_id VARCHAR(6) NOT NULL,
+    lesson_id BIGINT NOT NULL,
     topic_name VARCHAR(15) NOT NULL,
     CONSTRAINT post_user_username_fk FOREIGN KEY (username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT post_topic_lesson_fk FOREIGN KEY (lesson_id, topic_name) REFERENCES topic (lesson_id, name) ON DELETE CASCADE ON UPDATE CASCADE
@@ -103,7 +139,7 @@ CREATE TABLE public.sample_test
     date date,
     uni_held VARCHAR(40),
     "#_of_questions" INTEGER,
-    lesson_id VARCHAR(6) NOT NULL,
+    lesson_id BIGINT NOT NULL,
     CONSTRAINT sample_test_lesson_lesson_id_fk FOREIGN KEY (lesson_id) REFERENCES lesson (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -115,9 +151,8 @@ CREATE TABLE public.question
     context VARCHAR(512) NOT NULL,
     publish_date date NOT NULL,
     publish_time time NOT NULL,
-    last_edit date NOT NULL,
     username VARCHAR(22) NOT NULL,
-    lesson_id VARCHAR(6) NOT NULL,
+    lesson_id BIGINT NOT NULL,
     topic_name VARCHAR(15) NOT NULL,
     title VARCHAR(50) NOT NULL,
     sample_test_id VARCHAR(6),
@@ -134,9 +169,8 @@ CREATE TABLE public.answer
     context VARCHAR(512) NOT NULL,
     publish_date date NOT NULL,
     publish_time time NOT NULL,
-    last_edit date NOT NULL,
     username VARCHAR(22) NOT NULL,
-    lesson_id VARCHAR(6) NOT NULL,
+    lesson_id BIGINT NOT NULL,
     topic_name VARCHAR(15) NOT NULL,
     question_id VARCHAR(6) NOT NULL,
     CONSTRAINT answer_question_post_id_fk FOREIGN KEY (question_id) REFERENCES question (post_id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -149,12 +183,12 @@ CREATE TABLE public.answer
 CREATE TABLE public."like"
 (
     user_username VARCHAR(15) NOT NULL,
-    post_id VARCHAR(6) NOT NULL,
+    post_id BIGINT NOT NULL,
     date date NOT NULL ,
     time time NOT NULL,
     CONSTRAINT like_pkey PRIMARY KEY (user_username, post_id),
-    CONSTRAINT like_post_id_fk FOREIGN KEY (user_username) REFERENCES post (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT like_user_username_fk FOREIGN KEY (user_username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT like_user_username_fk FOREIGN KEY (user_username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT like_post_id_fk FOREIGN KEY (post_id) REFERENCES post (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE INDEX like_user_username_post_id_index ON public."like" (user_username, post_id);
 
@@ -163,7 +197,7 @@ CREATE INDEX like_user_username_post_id_index ON public."like" (user_username, p
 CREATE TABLE public.bookmark
 (
     user_username VARCHAR(15) NOT NULL,
-    post_id VARCHAR(6) NOT NULL,
+    post_id BIGINT NOT NULL,
     date date NOT NULL,
     time time NOT NULL,
     CONSTRAINT bookmark_user_username_post_id_pk PRIMARY KEY (user_username, post_id),
@@ -174,7 +208,7 @@ CREATE TABLE public.bookmark
 
 CREATE TABLE public.content
 (
-    id VARCHAR(8) PRIMARY KEY NOT NULL,
+    id id_number PRIMARY KEY NOT NULL,
     title VARCHAR(20) NOT NULL,
     author VARCHAR(30),
     stock INT DEFAULT 0,
@@ -186,7 +220,7 @@ CREATE TABLE public.content
 
 CREATE TABLE public.book
 (
-    content_id VARCHAR(8) PRIMARY KEY NOT NULL,
+    content_id BIGINT PRIMARY KEY NOT NULL,
     title VARCHAR(20) NOT NULL,
     isbn VARCHAR(16) NOT NULL,
     publisher VARCHAR(20),
@@ -201,7 +235,7 @@ CREATE UNIQUE INDEX book_isbn_uindex ON public.book (isbn);
 
 CREATE TABLE public.handout
 (
-    content_id VARCHAR(8) PRIMARY KEY NOT NULL,
+    content_id BIGINT PRIMARY KEY NOT NULL,
     title VARCHAR(20) NOT NULL,
     "#of_pages" INT DEFAULT 0 NOT NULL,
     share_username VARCHAR(15) NOT NULL,
@@ -212,14 +246,14 @@ CREATE TABLE public.handout
 
 CREATE TABLE public.course
 (
-    id VARCHAR(6) PRIMARY KEY NOT NULL,
+    id id_number PRIMARY KEY NOT NULL,
     title VARCHAR(12),
     schedule VARCHAR(16),
     capacity INT DEFAULT 0,
     attendee INT DEFAULT 0,
     "#of_sessions" INT DEFAULT 1,
     price VARCHAR(6),
-    lesson_id VARCHAR(6) NOT NULL ,
+    lesson_id BIGINT NOT NULL ,
     instructor_non_admin_username VARCHAR(15) NOT NULL,
     CONSTRAINT course_user_username_fk FOREIGN KEY (instructor_non_admin_username) REFERENCES "user" (username) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT course_lesson_id_fk FOREIGN KEY (lesson_id) REFERENCES lesson (id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -230,21 +264,22 @@ CREATE TABLE public.course
 
 CREATE TABLE public.start_course
 (
-    request_id VARCHAR(6) PRIMARY KEY NOT NULL,
+    request_id id_number PRIMARY KEY NOT NULL,
     submission_time time NOT NULL,
+    submission_date date NOT NULL,
     submit_non_admin_user VARCHAR(15) NOT NULL,
-    submit_lesson_id VARCHAR(6) NOT NULL,
+    submit_lesson_id BIGINT NOT NULL,
     CONSTRAINT start_course_request_id_fk FOREIGN KEY (request_id) REFERENCES request (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT start_course_non_admin_username_fk FOREIGN KEY (submit_non_admin_user) REFERENCES non_admin (username) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT start_course_lesson_id_fk FOREIGN KEY (submit_lesson_id) REFERENCES lesson (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 
-
 CREATE TABLE public.upgrade
 (
-    request_id VARCHAR(6) PRIMARY KEY NOT NULL,
+    request_id id_number PRIMARY KEY NOT NULL,
     submission_time time NOT NULL,
+    submission_date date NOT NULL,
     submit_non_admin_user VARCHAR(15) NOT NULL,
     CONSTRAINT upgrade_request_id_fk FOREIGN KEY (request_id) REFERENCES request (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT upgrade_non_admin_username_fk FOREIGN KEY (submit_non_admin_user) REFERENCES non_admin (username) ON DELETE CASCADE ON UPDATE CASCADE
@@ -255,7 +290,7 @@ CREATE TABLE public.upgrade
 CREATE TABLE public."check"
 (
     admin_username VARCHAR(15) NOT NULL,
-    request_id VARCHAR(6) NOT NULL,
+    request_id id_number  NOT NULL,
     date date,
     time time,
     result BOOLEAN,
@@ -268,7 +303,7 @@ CREATE TABLE public."check"
 
 CREATE TABLE public.enroll
 (
-    coures_id VARCHAR(6) NOT NULL,
+    coures_id id_number  NOT NULL,
     non_admin_username VARCHAR(15) NOT NULL,
     date date,
     time time,
@@ -281,8 +316,8 @@ CREATE TABLE public.enroll
 
 CREATE TABLE public.reference
 (
-    content_id VARCHAR(10) NOT NULL,
-    course_id VARCHAR(6) NOT NULL,
+    content_id id_number  NOT NULL,
+    course_id id_number  NOT NULL,
     CONSTRAINT reference_content_id_course_id_pk PRIMARY KEY (content_id, course_id),
     CONSTRAINT reference_content_id_fk FOREIGN KEY (content_id) REFERENCES content (id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT reference_course_id_fk FOREIGN KEY (course_id) REFERENCES course (id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -293,47 +328,45 @@ CREATE TABLE public.reference
 ------------                    --------------
 
 
-CREATE OR REPLACE FUNCTION failure_message()
+CREATE OR REPLACE FUNCTION check_holder_of_course()
     RETURNS TRIGGER AS $course_held_by_instructor$
     BEGIN
-        IF new.submit_non_admin_user NOT IN (SELECT username FROM non_admin WHERE type = 'instructor') THEN
+        IF new.submit_non_admin_user NOT IN (SELECT username FROM non_admin WHERE type='instructor') THEN
             RAISE EXCEPTION 'you are not an instructor' ;
         END IF;
         RETURN new;
     END;
     $course_held_by_instructor$ LANGUAGE plpgsql;
 
-
 CREATE TRIGGER course_held_by_instructor
     BEFORE INSERT ON start_course
     FOR EACH ROW
-    EXECUTE PROCEDURE failure_message();
+    EXECUTE PROCEDURE check_holder_of_course();
 
 
-
-CREATE OR REPLACE FUNCTION update_user_type_procedure()
+-- If a request is accepted, the appropriate action is taken--
+CREATE OR REPLACE FUNCTION process_request()
     RETURNS TRIGGER AS $request_acception$
     DECLARE
-        a1 VARCHAR(6);
+        a1 BIGINT;
         b1 VARCHAR(15);
     BEGIN
-        a1:= (select submit_lesson_id from start_course, lesson WHERE start_course.submit_lesson_id = lesson.id);
-        b1:= (select name from non_admin, start_course where start_course.submit_non_admin_user = non_admin.username);
+        a1:= (SELECT submit_lesson_id FROM "check" NATURAL JOIN start_course AS tt WHERE new.request_id = tt.request_id);
+        b1:= (SELECT submit_non_admin_user FROM "check" NATURAL JOIN start_course AS ss WHERE new.request_id = ss.request_id);
 
-        IF non_admin.username IN (SELECT submit_non_admin_user FROM upgrade NATURAL JOIN "check"
-            WHERE "check".request_id=upgrade.request_id AND result=TRUE)
+        IF new.request_id IN (SELECT request_id FROM upgrade ) AND new.result=TRUE
             THEN UPDATE non_admin SET type='instructor';
-        ELSEIF non_admin.username IN (SELECT submit_non_admin_user FROM start_course NATURAL JOIN "check"
-            WHERE "check".request_id=start_course.request_id AND result = TRUE)
-            THEN INSERT INTO course (lesson_id, instructor_non_admin_user) VALUES(a1, b1);
+        ELSEIF new.request_id IN (SELECT request_id FROM start_course) AND new.result = TRUE
+            THEN INSERT INTO course (lesson_id, instructor_non_admin_username) VALUES(a1, b1);
         END IF;
         RETURN NULL;
     END;
     $request_acception$ LANGUAGE plpgsql;
 
 CREATE TRIGGER request_acception
-    AFTER UPDATE OF result ON "check"
-    EXECUTE PROCEDURE update_user_type_procedure();
+    AFTER INSERT OR UPDATE OF result ON "check"
+    FOR EACH ROW
+    EXECUTE PROCEDURE process_request();
 
 -------------user is-a-----------------
 
@@ -467,7 +500,7 @@ CREATE TRIGGER can_not_change_request
 CREATE OR REPLACE FUNCTION add_request()
     RETURNS TRIGGER AS $add_request_before_add_start_course$
     BEGIN
-        INSERT INTO request VALUES (new.request_id, new.submission_time);
+        INSERT INTO request VALUES (new.request_id, new.submission_time, new.submission_date);
         RETURN new;
     END;
     $add_request_before_add_start_course$ LANGUAGE plpgsql;
@@ -520,51 +553,6 @@ CREATE TRIGGER non_admin_instructor
     BEFORE INSERT ON upgrade
     for EACH ROW
     EXECUTE PROCEDURE upgrade_to_instructor();
-
-
-
-CREATE OR REPLACE FUNCTION pseudo_encrypt(VALUE int) returns BIGINT AS $$
-    DECLARE
-        l1 int;
-        l2 int;
-        r1 int;
-        r2 int;
-        i int:=0;
-    BEGIN
-        l1:= (VALUE >> 16) & 65535;
-        r1:= VALUE & 65535;
-        WHILE i < 3 LOOP
-            l2 := r1;
-            r2 := l1 # ((((1366.0 * r1 + 150889) % 714025) / 714025.0) * 32767)::int;
-            l1 := l2;
-            r1 := r2;
-            i := i + 1;
-        END LOOP;
-    RETURN ((l1::bigint << 16) + r1);
-END;
-$$ LANGUAGE plpgsql strict immutable;
-
-
-
--- Create a sequence for generating the input to the pseudo_encrypt function
-create sequence random_int_seq;
-
--- A function that increments the sequence above and generates a random integer
-create function make_random_id() returns bigint as $$
-    select pseudo_encrypt(nextval('random_int_seq')::int)
-$$ language sql;
-
-create table f (
-  -- the id column now has a random default ID
-  id integer primary key default make_random_id()
-);
-
-insert into f values (default);
-insert into f values (default);
-
-select * from f;
-
-
 
 
 

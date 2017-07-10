@@ -1,4 +1,4 @@
-INSERT INTO non_admin VALUES ('hosein', 'qwertyui', 'hosein', 'hos7@gmail.com', 'instructor', '1/1/97', '30/10/98');
+INSERT INTO non_admin VALUES ('hosein', 'qwertyui', 'hosein', 'hos7@gmail.com', 'instructor', '1/1/97', '3/10/98');
 INSERT INTO non_admin VALUES ('reza', 'zaxscdvf', 'reza', 'reza@gmail.com', 'instructor', '1/10/97', '3/9/98');
 INSERT INTO non_admin VALUES ('kambiz', 'asdfghjk', 'kambiz', 'kam@gmail.com', 'normal', '10/7/97', '3/11/98');
 INSERT INTO non_admin VALUES ('mahyar', 'mknjbhvg', 'mahyar', 'mah@gmail.com', 'normal', '1/12/98', '13/1/99');
@@ -15,13 +15,13 @@ INSERT INTO admin VALUES ('mohsen', 'xvayilkh', 'mohsen', 'mohs@gmail.com');
 INSERT INTO admin VALUES ('milad7ink', 'opglkwjilkh', 'milad', 'ink@gmail.com');
 
 
-INSERT INTO lesson VALUES (DEFAULT , 'amar');
+INSERT INTO lesson VALUES (DEFAULT , 'math');
 INSERT INTO lesson VALUES (DEFAULT , 'jabr');
 
-INSERT INTO start_course VALUES ('123456', '14:32', 'hosein', '40110');
-INSERT INTO start_course VALUES ('154326', '14:31', 'mahyar', '20216');
-INSERT INTO upgrade VALUES ('254136', '2:33', 'reza');
-INSERT INTO upgrade VALUES ('16853', '00:16', 'kambiz');
+INSERT INTO start_course VALUES (DEFAULT , '14:32','1/10/97', 'hosein', '124940686');
+INSERT INTO start_course VALUES ('154326', '14:31','1/10/97','mahyar', '20216');
+INSERT INTO upgrade VALUES (DEFAULT , '2:33','1/10/97', 'hosein');
+INSERT INTO upgrade VALUES (DEFAULT , '00:16','1/10/97', 'kambiz');
 
 INSERT INTO topic VALUES ('40110', 'omid riazi', NULL , NULL );
 INSERT INTO question VALUES ('14323', 'seale 16 konkoor chi mishe?', '14/10/75', '3:13', '10/10/75', 'kambiz', '40110', 'jabr', 'konkoor', DEFAULT );
@@ -30,11 +30,11 @@ INSERT INTO answer VALUES ('14334', 'na mishe 2', '14/8/91', '14:18', '14/8/91',
 
 
 SELECT * from "check";
-INSERT INTO "check" VALUES ('mohsen', '16853', '17/10/96', '13:31', FALSE);
+INSERT INTO "check" VALUES ('hamid', '379599332', '1/10/96', '13:31', FALSE);
 SELECT * FROM request;
 SELECT * FROM course;
 SELECT * FROM "check";
-UPDATE "check" SET result = TRUE;
+UPDATE "check" SET result = TRUE WHERE request_id='379599332';
 SELECT * FROM lesson;
 
 select submit_lesson_id from start_course, lesson WHERE start_course.submit_lesson_id = lesson.id;
